@@ -1,0 +1,90 @@
+# This workflow validates, builds, and deploys the project to Maven Central.
+# It is triggered on a push event for tags matching 'v*.*.*' (e.g., v1.2.3),
+# or can be triggered manually.
+#
+# Comprehensive validation strategy:
+# 1. Runs full test suite across all supported LTS JDK versions (8, 11, 17, 21)
+# 2. Only proceeds to deployment if all tests pass
+# 3. Builds, signs with GPG, and deploys to Maven Central
+# 4. Creates GitHub Release with auto-generated notes
+# 5. Uploads compiled JAR artifacts to release
+
+name: Release and Deploy Version
+
+on:
+  push:
+    tags:
+      - 'v*.*.*' # Triggers on any tag starting with 'v'
+  workflow_dispatch:
+
+permissions:
+  contents: write # to fetch code (actions/checkout) and push tags
+
+jobs:
+  # Comprehensive test validation across all supported LTS JDK versions
+  test-compatibility:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        java-version: [8, 11, 17, 21]
+      fail-fast: true # Stop immediately if any combination fails
+    name: Test (JDK ${{ matrix.java-version }})
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up JDK ${{ matrix.java-version }}
+        uses: actions/setup-java@v5
+        with:
+          java-version: ${{ matrix.java-version }}
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Test with JDK ${{ matrix.java-version }}
+        run: sh mvnw clean verify --batch-mode -Denforcer.skip=true
+
+  # Deploy only after all tests pass
+  build-release-deploy:
+    needs: test-compatibility
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+          gpg-private-key: ${{ secrets.GPG_SIGNING_KEY }}
+          server-id: maven-central
+          server-username: MAVEN_CENTRAL_USERNAME
+          server-password: MAVEN_CENTRAL_PASSWORD
+
+      - name: Build and Deploy
+        run: sh mvnw -ntp clean deploy -P release --batch-mode -DskipTests
+        env:
+          MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+          MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create ${{ github.ref_name }} \
+            --generate-notes \
+            --title "Version ${{ github.ref_name }}"
+          echo "✓ GitHub Release ${{ github.ref_name }} created successfully"
+
+      - name: Upload Release Assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload ${{ github.ref_name }} \
+            target/jul-test-mock-*.jar --clobber
+          echo "✓ JAR artifact uploaded to release ${{ github.ref_name }}"
+          echo "✓ Release ${{ github.ref_name }} is now live on Maven Central and GitHub"

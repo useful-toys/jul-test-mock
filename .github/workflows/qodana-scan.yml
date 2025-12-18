@@ -1,0 +1,35 @@
+# This workflow runs a Qodana static analysis scan on the codebase.
+# It is triggered on pull requests, manual dispatch, and pushes to feature branches (not main).
+# The results are used to identify code quality issues and potential bugs.
+
+name: Qodana Scan
+
+on:
+  push:
+    branches-ignore:
+      - 'main'
+    paths:
+      - 'src/**'
+      - 'pom.xml'
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  checks: write
+
+jobs:
+  qodana-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}  # to check out the actual pull request commit, not the merge commit
+          fetch-depth: 0
+
+      - name: Qodana Scan
+        uses: JetBrains/qodana-action@v2025.2
+        env:
+          QODANA_TOKEN: ${{ secrets.QODANA_TOKEN_714368892 }}
