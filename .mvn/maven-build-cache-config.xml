@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cache xmlns="http://maven.apache.org/BUILD-CACHE-CONFIG/1.1.0">
+    <configuration>
+        <enabled>false</enabled>
+    </configuration>
+</cache>
