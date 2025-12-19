@@ -34,14 +34,14 @@ import java.util.logging.Level;
  * logger.addHandler(handler);
  * logger.info("Test message");
  * 
- * AssertHandler.assertRecord(handler, 0, Level.INFO, "Test message");
+ * AssertLogger.assertRecord(handler, 0, Level.INFO, "Test message");
  * }</pre>
  *
  * @author Daniel Felix Ferber
  */
-public final class AssertHandler {
+public final class AssertLogger {
 
-    private AssertHandler() {
+    private AssertLogger() {
         // Utility class - prevent instantiation
     }
 

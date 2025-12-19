@@ -32,13 +32,15 @@ The `AssertHandler` class provides convenient static methods for asserting log r
 ```java
 import java.util.logging.Logger;
 import java.util.logging.Level;
+
 import org.usefultoys.jul.mock.MockHandler;
-import static org.usefultoys.jul.mock.AssertHandler.*;
+
+import static org.usefultoys.jul.mock.AssertLogger.*;
 
 class MyTest {
     private Logger logger;
     private MockHandler handler;
-    
+
     @BeforeEach
     void setUp() {
         logger = Logger.getLogger("test.logger");
@@ -48,13 +50,13 @@ class MyTest {
         logger.setLevel(Level.ALL);
         handler.clearRecords();
     }
-    
+
     @Test
     void testWithAssertHandler() {
         logger.info("Processing user: alice");
         logger.severe("Failed to process user: bob");
-        
-        // Use AssertHandler for cleaner assertions
+
+        // Use AssertLogger for cleaner assertions
         assertRecord(handler, 0, Level.INFO, "Processing user");
         assertRecord(handler, 1, Level.SEVERE, "Failed to process");
     }
@@ -430,7 +432,7 @@ Since this is a test-scoped dependency, ensure your test classpath includes the 
 ### 1. Use AssertHandler for Cleaner Tests
 
 ```java
-// Good - Uses AssertHandler for cleaner code
+// Good - Uses AssertLogger for cleaner code
 assertRecord(handler, 0, Level.INFO, "User logged in");
 
 // Less preferred - Manual casting and assertion
