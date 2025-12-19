@@ -23,7 +23,7 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static org.usefultoys.jul.mock.AssertHandler.*;
+import static org.usefultoys.jul.mock.AssertLogger.*;
 
 /**
  * Integration tests demonstrating real-world usage scenarios of the jul-test-mock library.

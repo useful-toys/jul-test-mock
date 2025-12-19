@@ -24,10 +24,10 @@ import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static org.usefultoys.jul.mock.AssertHandler.*;
+import static org.usefultoys.jul.mock.AssertLogger.*;
 
-@DisplayName("AssertHandler Tests")
-class AssertHandlerTest {
+@DisplayName("AssertLogger Tests")
+class AssertLoggerTest {
 
     private Logger logger;
     private MockHandler handler;

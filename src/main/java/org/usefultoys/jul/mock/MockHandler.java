@@ -150,7 +150,7 @@ public class MockHandler extends Handler {
      * @param messagePart a substring that should be present in the record's message
      */
     public void assertRecord(final int recordIndex, final String messagePart) {
-        AssertHandler.assertRecord(this, recordIndex, messagePart);
+        AssertLogger.assertRecord(this, recordIndex, messagePart);
     }
 
     /**
@@ -161,7 +161,7 @@ public class MockHandler extends Handler {
      * @param messagePart   a substring that should be present in the record's message
      */
     public void assertRecord(final int recordIndex, final Level expectedLevel, final String messagePart) {
-        AssertHandler.assertRecord(this, recordIndex, expectedLevel, messagePart);
+        AssertLogger.assertRecord(this, recordIndex, expectedLevel, messagePart);
     }
 
     /**
@@ -172,7 +172,7 @@ public class MockHandler extends Handler {
      * @param messageParts  an array of substrings that should be present in the record's message
      */
     public void assertRecord(final int recordIndex, final Level expectedLevel, final String... messageParts) {
-        AssertHandler.assertRecord(this, recordIndex, expectedLevel, messageParts);
+        AssertLogger.assertRecord(this, recordIndex, expectedLevel, messageParts);
     }
 
     /**
