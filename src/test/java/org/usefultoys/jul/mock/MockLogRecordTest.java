@@ -18,6 +18,8 @@ package org.usefultoys.jul.mock;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.ListResourceBundle;
+import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
 
@@ -142,5 +144,71 @@ class MockLogRecordTest {
 
         assertEquals("User {0} logged in", mockRecord.getFormattedMessage(),
                 "should return original message when parameters don't match");
+    }
+
+    @Test
+    @DisplayName("should handle resource bundle localization")
+    void shouldHandleResourceBundleLocalization() {
+        final ResourceBundle bundle = new ListResourceBundle() {
+            @Override
+            protected Object[][] getContents() {
+                return new Object[][]{
+                        {"greeting.key", "Hello {0}!"}
+                };
+            }
+        };
+
+        final LogRecord logRecord = new LogRecord(Level.INFO, "greeting.key");
+        logRecord.setResourceBundle(bundle);
+        logRecord.setParameters(new Object[]{"World"});
+
+        final MockLogRecord mockRecord = new MockLogRecord(0, logRecord);
+
+        assertEquals("Hello World!", mockRecord.getFormattedMessage(),
+                "should apply resource bundle localization and parameter substitution");
+    }
+
+    @Test
+    @DisplayName("should handle missing resource bundle key")
+    void shouldHandleMissingResourceBundleKey() {
+        final ResourceBundle bundle = new ListResourceBundle() {
+            @Override
+            protected Object[][] getContents() {
+                return new Object[][]{
+                        {"known.key", "Known value"}
+                };
+            }
+        };
+
+        final LogRecord logRecord = new LogRecord(Level.INFO, "unknown.key");
+        logRecord.setResourceBundle(bundle);
+
+        final MockLogRecord mockRecord = new MockLogRecord(0, logRecord);
+
+        assertEquals("unknown.key", mockRecord.getFormattedMessage(),
+                "should return original message when key not found in resource bundle");
+    }
+
+    @Test
+    @DisplayName("should capture thread ID")
+    void shouldCaptureThreadID() {
+        final LogRecord logRecord = new LogRecord(Level.INFO, "Test message");
+        final int threadID = logRecord.getThreadID();
+
+        final MockLogRecord mockRecord = new MockLogRecord(0, logRecord);
+
+        assertEquals(threadID, mockRecord.getThreadID(), "should have correct thread ID");
+    }
+
+    @Test
+    @DisplayName("should capture resource bundle name")
+    void shouldCaptureResourceBundleName() {
+        final LogRecord logRecord = new LogRecord(Level.INFO, "Test message");
+        logRecord.setResourceBundleName("test.bundle");
+
+        final MockLogRecord mockRecord = new MockLogRecord(0, logRecord);
+
+        assertEquals("test.bundle", mockRecord.getResourceBundleName(),
+                "should have correct resource bundle name");
     }
 }
