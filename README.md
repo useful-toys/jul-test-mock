@@ -1,16 +1,22 @@
-# JUL Test Mock
+# jul-test-mock
 
-A comprehensive mock implementation of the Java Util Logging (JUL) framework designed specifically for unit testing. This library provides a mock Handler that captures log records in memory, allowing developers to inspect and assert log events during test execution.
+A lightweight in-memory mock implementation of Java Util Logging (JUL) designed specifically for unit testing. This library provides a test-focused Handler implementation that captures log records in memory, enabling clean and powerful assertions in your tests.
 
-## Features
+## Overview
 
-- **Complete JUL Handler Implementation**: Full mock implementation of Handler that captures all log records
-- **Event Capturing**: All log records are captured in memory for test verification
-- **Assertion Utilities**: Rich API for asserting log records with descriptive error messages
-- **Level Control**: Fine-grained control over which log levels are captured during tests
-- **Thread-Safe**: Safe for use in single-threaded test environments
+`jul-test-mock` provides a `MockHandler` that captures log records during test execution, along with comprehensive assertion utilities for validating logged content. Unlike production logging frameworks, this mock is optimized for test scenarios with minimal dependencies and maximum control.
+
+## Key Features
+
+- **JUnit 5 Integration**: `@JulMock` extension for automatic handler setup and cleanup
+- **In-Memory Handler**: Captures all log records in a simple ArrayList
+- **Zero Configuration**: Works out of the box with standard JUL
+- **Test-Focused Design**: Built for test environments, not production
+- **Comprehensive Assertions**: Purpose-built assertion methods for all common test scenarios
+- **Message Parts Philosophy**: Test log messages by their semantic parts, not exact strings
+- **No External Dependencies**: Built on top of standard JUL and JUnit 5
+- **Fluent API**: Natural and readable test code
 - **Java 8+ Compatible**: Works with Java 8 and higher versions
-- **Zero Dependencies**: Only requires JUL (built into Java) and JUnit 5 for assertions
 
 ## Maven Dependency
 
@@ -23,384 +29,65 @@ A comprehensive mock implementation of the Java Util Logging (JUL) framework des
 </dependency>
 ```
 
-## Quick Start
+## Getting Started
 
-### Recommended Usage with AssertHandler
+### Recommended: Using JUnit 5 Extension
 
-The `AssertHandler` class provides convenient static methods for asserting log records - this is the recommended way to use this library:
+The easiest way to use jul-test-mock is with the JUnit 5 `@JulMock` extension. It handles handler setup and cleanup automatically:
 
 ```java
+import org.usefultoys.jul.mock.MockHandler;
+import org.usefultoys.jul.mock.MockHandlerExtension;
+import org.junit.jupiter.api.extension.ExtendWith;
 import java.util.logging.Logger;
 import java.util.logging.Level;
+import static org.usefultoys.jul.mock.AssertLogger.*;
 
+@ExtendWith(MockHandlerExtension.class)
+class MyTest {
+    
+    @JulMock
+    MockHandler handler;
+    
+    @Test
+    void shouldLogInfoMessage() {
+        Logger logger = Logger.getLogger("test");
+        logger.info("Hello World");
+        
+        assertRecordCount(handler, 1);
+        assertRecord(handler, 0, Level.INFO, "Hello World");
+    }
+}
+```
+
+**Key Benefits:**
+- Automatic handler registration with the logger
+- Automatic handler cleanup after each test
+- Clean, minimal test code
+- Configurable log level control via annotation
+
+### Manual Handler Management (Alternative)
+
+If you prefer manual control or cannot use JUnit extensions:
+
+```java
 import org.usefultoys.jul.mock.MockHandler;
-
+import java.util.logging.Logger;
+import java.util.logging.Level;
 import static org.usefultoys.jul.mock.AssertLogger.*;
 
 class MyTest {
-    private Logger logger;
-    private MockHandler handler;
-
-    @BeforeEach
-    void setUp() {
-        logger = Logger.getLogger("test.logger");
-        logger.setUseParentHandlers(false);
-        handler = new MockHandler();
-        logger.addHandler(handler);
-        logger.setLevel(Level.ALL);
-        handler.clearRecords();
-    }
-
-    @Test
-    void testWithAssertHandler() {
-        logger.info("Processing user: alice");
-        logger.severe("Failed to process user: bob");
-
-        // Use AssertLogger for cleaner assertions
-        assertRecord(handler, 0, Level.INFO, "Processing user");
-        assertRecord(handler, 1, Level.SEVERE, "Failed to process");
-    }
-}
-```
-
-### Alternative: Direct MockHandler Usage
-
-You can also work directly with `MockHandler` for more detailed inspection:
-
-```java
-import java.util.logging.Logger;
-import java.util.logging.Level;
-import org.usefultoys.jul.mock.MockHandler;
-import org.usefultoys.jul.mock.MockLogRecord;
-
-@Test
-void testLogging() {
-    // Setup logger with MockHandler
-    Logger logger = Logger.getLogger("test.logger");
-    logger.setUseParentHandlers(false);
-    MockHandler handler = new MockHandler();
-    logger.addHandler(handler);
-    logger.setLevel(Level.ALL);
-    handler.clearRecords();
-    
-    // Log some messages
-    logger.log(Level.INFO, "User {0} logged in", "john");
-    logger.log(Level.WARNING, "Low disk space: {0} GB remaining", 2.5);
-    
-    // Assert log records
-    assertEquals(2, handler.getRecordCount());
-    assertEquals("User john logged in", handler.getRecord(0).getFormattedMessage());
-    assertEquals(Level.INFO, handler.getRecord(0).getLevel());
-}
-```
-
-## Core Classes
-
-### MockHandler
-
-The main mock handler implementation that captures log records in memory.
-
-**Key Methods:**
-- `getRecordCount()` - Returns the number of captured records
-- `getRecord(int index)` - Returns a specific record by index
-- `getLogRecords()` - Returns all records as an unmodifiable list
-- `clearRecords()` - Clears all captured records
-- `setLevel(Level)` - Sets the minimum level to capture
-- `setStdoutEnabled(boolean)` - Enable/disable printing to stdout
-- `setStderrEnabled(boolean)` - Enable/disable printing to stderr
-- `toText()` - Returns all messages as a formatted string
-
-### MockLogRecord
-
-Immutable representation of a single log record.
-
-**Key Properties:**
-- `getLevel()` - The log level (FINEST, FINER, FINE, CONFIG, INFO, WARNING, SEVERE)
-- `getFormattedMessage()` - The formatted message with parameters resolved
-- `getMessage()` - The original message template
-- `getParameters()` - The message parameters
-- `getThrown()` - The associated throwable (if any)
-- `getLoggerName()` - The name of the logger that created this record
-- `getSourceClassName()` - The class name where logging occurred
-- `getSourceMethodName()` - The method name where logging occurred
-- `getMillis()` - The timestamp in milliseconds
-- `getSequenceNumber()` - The sequence number of the record
-
-### AssertHandler
-
-Utility class providing static assertion methods for testing log records.
-
-**Index-Based Record Assertions:**
-- `assertRecord(MockHandler, int, String)` - Assert message contains text
-- `assertRecord(MockHandler, int, Level, String)` - Assert level and message
-- `assertRecord(MockHandler, int, Level, String...)` - Assert level with multiple message parts
-
-**Existence-Based Record Assertions:**
-- `assertHasRecord(MockHandler, String)` - Assert any record contains message part
-- `assertHasRecord(MockHandler, Level, String)` - Assert any record has level and message
-- `assertHasRecord(MockHandler, Level, String...)` - Assert any record has level and all message parts
-
-**Throwable Assertions:**
-- `assertRecordWithThrowable(MockHandler, int, Class)` - Assert record has specific throwable type
-- `assertRecordWithThrowable(MockHandler, int, Class, String)` - Assert record has throwable type and message
-- `assertRecordHasThrowable(MockHandler, int)` - Assert record has any throwable
-- `assertHasRecordWithThrowable(MockHandler, Class)` - Assert any record has specific throwable type
-- `assertHasRecordWithThrowable(MockHandler, Class, String)` - Assert any record has throwable type and message
-- `assertHasRecordWithThrowable(MockHandler)` - Assert any record has any throwable
-
-**Record Counting Assertions:**
-- `assertRecordCount(MockHandler, int)` - Assert total number of records
-- `assertNoRecords(MockHandler)` - Assert no records were logged
-- `assertRecordCountByLevel(MockHandler, Level, int)` - Assert count of records by level
-- `assertRecordCountByMessage(MockHandler, String, int)` - Assert count of records containing message part
-
-**Record Sequence Assertions:**
-- `assertRecordSequence(MockHandler, Level...)` - Assert exact sequence of log levels
-- `assertRecordSequence(MockHandler, String...)` - Assert exact sequence of message parts
-
-## Advanced Usage
-
-### Controlling Log Levels
-
-```java
-@Test
-void testLogLevelControl() {
-    Logger logger = Logger.getLogger("test");
-    logger.setUseParentHandlers(false);
-    MockHandler handler = new MockHandler();
-    logger.addHandler(handler);
-    handler.clearRecords();
-    
-    // Only capture WARNING and above
-    handler.setLevel(Level.WARNING);
-    logger.setLevel(Level.ALL);
-    
-    logger.fine("This won't be captured");
-    logger.warning("This will be captured");
-    
-    assertEquals(1, handler.getRecordCount());
-    assertRecord(handler, 0, Level.WARNING, "This will be captured");
-}
-```
-
-### Testing Exception Logging
-
-```java
-@Test
-void testExceptionLogging() {
-    Logger logger = Logger.getLogger("test");
-    logger.setUseParentHandlers(false);
-    MockHandler handler = new MockHandler();
-    logger.addHandler(handler);
-    handler.clearRecords();
-    
-    Exception ex = new RuntimeException("Test exception");
-    logger.log(Level.SEVERE, "Operation failed", ex);
-    
-    MockLogRecord record = handler.getRecord(0);
-    assertEquals(Level.SEVERE, record.getLevel());
-    assertEquals("Operation failed", record.getFormattedMessage());
-    assertSame(ex, record.getThrown());
-}
-```
-
-### Clearing Records Between Tests
-
-```java
-@Test
-void testRecordClearing() {
-    Logger logger = Logger.getLogger("test");
-    logger.setUseParentHandlers(false);
-    MockHandler handler = new MockHandler();
-    logger.addHandler(handler);
-    handler.clearRecords();
-    
-    logger.info("First message");
-    assertEquals(1, handler.getRecordCount());
-    
-    // Clear records for next test phase
-    handler.clearRecords();
-    assertEquals(0, handler.getRecordCount());
-    
-    logger.info("Second message");
-    assertEquals(1, handler.getRecordCount());
-}
-```
-
-### Inspecting All Log Output
-
-```java
-@Test
-void testCompleteLogOutput() {
-    Logger logger = Logger.getLogger("test");
-    logger.setUseParentHandlers(false);
-    MockHandler handler = new MockHandler();
-    logger.addHandler(handler);
-    handler.clearRecords();
-    
-    logger.info("Starting process");
-    logger.fine("Processing step 1");
-    logger.fine("Processing step 2");
-    logger.info("Process completed");
-    
-    // Get all messages as formatted text
-    String allMessages = handler.toText();
-    assertTrue(allMessages.contains("Starting process"));
-    assertTrue(allMessages.contains("Process completed"));
-    
-    // Or inspect individual records
-    List<MockLogRecord> records = handler.getLogRecords();
-    assertEquals(4, records.size());
-}
-```
-
-### Using Existence-Based Assertions
-
-```java
-@Test
-void testExistenceAssertions() {
-    Logger logger = Logger.getLogger("test");
-    logger.setUseParentHandlers(false);
-    MockHandler handler = new MockHandler();
-    logger.addHandler(handler);
-    handler.clearRecords();
-    
-    logger.info("User john logged in");
-    logger.warning("Invalid password attempt");
-    logger.severe("Database connection failed");
-    
-    // Check if any record contains specific text (order doesn't matter)
-    assertHasRecord(handler, "john");
-    assertHasRecord(handler, Level.SEVERE, "Database");
-    assertHasRecord(handler, Level.WARNING, "password");
-}
-```
-
-### Testing Exception Handling
-
-```java
-@Test
-void testExceptionAssertions() {
-    Logger logger = Logger.getLogger("test");
-    logger.setUseParentHandlers(false);
-    MockHandler handler = new MockHandler();
-    logger.addHandler(handler);
-    handler.clearRecords();
-    
-    logger.log(Level.SEVERE, "Database error", new SQLException("Connection timeout"));
-    logger.log(Level.WARNING, "Network issue", new IOException("Connection refused"));
-    
-    // Test specific throwable types
-    assertRecordWithThrowable(handler, 0, SQLException.class);
-    assertRecordWithThrowable(handler, 1, IOException.class, "refused");
-    
-    // Test existence of any throwable
-    assertHasRecordWithThrowable(handler, SQLException.class);
-    assertHasRecordWithThrowable(handler); // Any throwable
-}
-```
-
-### Counting Records
-
-```java
-@Test
-void testRecordCounting() {
-    Logger logger = Logger.getLogger("test");
-    logger.setUseParentHandlers(false);
-    MockHandler handler = new MockHandler();
-    logger.addHandler(handler);
-    handler.clearRecords();
-    
-    logger.info("Application started");
-    logger.warning("Authentication failed");
-    logger.info("Processing request");
-    logger.severe("Critical error occurred");
-    logger.warning("Unauthorized access");
-    
-    // Count total records
-    assertRecordCount(handler, 5);
-    
-    // Count by level
-    assertRecordCountByLevel(handler, Level.INFO, 2);
-    assertRecordCountByLevel(handler, Level.WARNING, 2);
-    assertRecordCountByLevel(handler, Level.SEVERE, 1);
-    
-    // Count by message content
-    assertRecordCountByMessage(handler, "error", 1); // Case sensitive
-}
-```
-
-### Validating Record Sequences
-
-```java
-@Test
-void testRecordSequences() {
-    Logger logger = Logger.getLogger("test");
-    logger.setUseParentHandlers(false);
-    MockHandler handler = new MockHandler();
-    logger.addHandler(handler);
-    handler.clearRecords();
-    
-    logger.info("Process starting");
-    logger.fine("Step 1 completed");
-    logger.fine("Step 2 completed");
-    logger.warning("Warning occurred");
-    logger.info("Process finished");
-    
-    // Verify exact sequence of levels
-    assertRecordSequence(handler, 
-        Level.INFO, Level.FINE, Level.FINE, Level.WARNING, Level.INFO);
-    
-    // Verify sequence of message parts
-    assertRecordSequence(handler, 
-        "starting", "Step 1", "Step 2", "Warning", "finished");
-}
-```
-
-### Working with Parameterized Messages
-
-```java
-@Test
-void testParameterizedMessages() {
-    Logger logger = Logger.getLogger("test");
-    logger.setUseParentHandlers(false);
-    MockHandler handler = new MockHandler();
-    logger.addHandler(handler);
-    handler.clearRecords();
-    
-    logger.log(Level.INFO, "User {0} accessed {1} at {2}", 
-        new Object[]{"alice", "/admin", "10:30 AM"});
-    
-    MockLogRecord record = handler.getRecord(0);
-    assertEquals("User alice accessed /admin at 10:30 AM", 
-        record.getFormattedMessage());
-    
-    // Can also check raw message and parameters
-    assertEquals("User {0} accessed {1} at {2}", record.getMessage());
-    assertArrayEquals(new Object[]{"alice", "/admin", "10:30 AM"}, 
-        record.getParameters());
-}
-```
-
-## Integration with Test Frameworks
-
-### JUnit 5
-
-```java
-@ExtendWith(MockitoExtension.class)
-class MyServiceTest {
     
     private MockHandler handler;
     private Logger logger;
     
     @BeforeEach
     void setUp() {
-        logger = Logger.getLogger(MyService.class.getName());
+        logger = Logger.getLogger("test");
         logger.setUseParentHandlers(false);
         handler = new MockHandler();
         logger.addHandler(handler);
         logger.setLevel(Level.ALL);
-        handler.clearRecords(); // Start each test clean
     }
     
     @AfterEach
@@ -409,125 +96,452 @@ class MyServiceTest {
     }
     
     @Test
-    void testServiceOperation() {
-        MyService service = new MyService();
-        service.performOperation();
+    void shouldLogInfoMessage() {
+        logger.info("Hello World");
         
-        assertRecord(handler, 0, Level.INFO, "Operation started");
-        assertRecord(handler, 1, Level.INFO, "Operation completed");
+        assertRecordCount(handler, 1);
+        assertRecord(handler, 0, Level.INFO, "Hello World");
     }
 }
 ```
 
-### Testing Configuration
+## AssertLogger API
 
-Since this is a test-scoped dependency, ensure your test classpath includes the mock implementation:
+The `AssertLogger` class provides static assertion methods for validating logged records. All assertions include descriptive error messages to help diagnose test failures.
 
-1. Add the dependency to your `pom.xml` with `<scope>test</scope>`
-2. Configure your loggers in test setup to use the MockHandler
-3. Your production code will use the real JUL handlers
+### Basic Assertions
+
+#### assertRecord(handler, index, level, ...messageParts)
+
+Validates a specific log record by index, level, and message content. Message parts are matched using `contains()` semantics - they don't need to be exact matches.
+
+```java
+logger.info("User alice logged in from 192.168.1.100");
+
+// These all pass - testing semantic parts
+assertRecord(handler, 0, Level.INFO, "alice", "logged in");
+assertRecord(handler, 0, Level.INFO, "192.168.1.100");
+assertRecord(handler, 0, Level.INFO, "User", "alice", "192.168");
+```
+
+**Why message parts?** Testing for exact string matches makes tests brittle. By checking for semantic parts, your tests remain robust even when log message formatting changes.
+
+#### assertRecordCount(handler, expectedCount)
+
+Validates the total number of log records captured:
+
+```java
+logger.info("Starting");
+logger.info("Processing");
+logger.info("Completed");
+
+assertRecordCount(handler, 3);
+```
+
+#### assertNoRecords(handler)
+
+Validates that no records were logged:
+
+```java
+// Code that shouldn't log anything
+someQuietOperation();
+
+assertNoRecords(handler);
+```
+
+### Level-Based Assertions
+
+#### assertRecordCountByLevel(handler, level, expectedCount)
+
+Counts records at a specific level:
+
+```java
+logger.info("Application started");
+logger.warning("Low disk space");
+logger.info("Processing request");
+logger.severe("Critical error");
+
+assertRecordCountByLevel(handler, Level.INFO, 2);
+assertRecordCountByLevel(handler, Level.WARNING, 1);
+assertRecordCountByLevel(handler, Level.SEVERE, 1);
+```
+
+### Message-Based Assertions
+
+#### assertHasRecord(handler, level, ...messageParts)
+
+Checks if any record exists with the specified level and message parts, regardless of order:
+
+```java
+logger.info("Started processing");
+logger.warning("Database connection slow");
+logger.info("Completed successfully");
+
+// Order doesn't matter for existence assertions
+assertHasRecord(handler, Level.WARNING, "Database", "slow");
+assertHasRecord(handler, Level.INFO, "Completed");
+```
+
+#### assertRecordCountByMessage(handler, messageSubstring, expectedCount)
+
+Counts records containing a specific substring:
+
+```java
+logger.info("Processing user alice");
+logger.warning("User bob authentication failed");
+logger.info("User charlie logged out");
+
+assertRecordCountByMessage(handler, "user", 2); // Case-sensitive
+```
+
+### Exception Assertions
+
+#### assertRecordWithThrowable(handler, index, exceptionClass, ...messageParts)
+
+Validates exception information in a log record:
+
+```java
+try {
+    throw new SQLException("Connection timeout after 30 seconds");
+} catch (SQLException e) {
+    logger.log(Level.SEVERE, "Database operation failed", e);
+}
+
+assertRecord(handler, 0, Level.SEVERE, "Database", "failed");
+assertRecordWithThrowable(handler, 0, SQLException.class, "timeout", "30 seconds");
+```
+
+#### assertRecordWithThrowableMessage(handler, index, exceptionClass, ...messageParts)
+
+Validates just the exception's message:
+
+```java
+assertRecordWithThrowableMessage(handler, 0, SQLException.class, "Connection", "timeout");
+```
+
+### Sequence Assertions
+
+#### assertRecordSequence(handler, ...levels)
+
+Validates the exact sequence of log levels:
+
+```java
+logger.info("Process starting");
+logger.fine("Step 1 completed");
+logger.warning("Warning occurred");
+logger.info("Process finished");
+
+assertRecordSequence(handler, Level.INFO, Level.FINE, Level.WARNING, Level.INFO);
+```
+
+#### assertRecordSequence(handler, ...messageParts)
+
+Validates the sequence of message content:
+
+```java
+assertRecordSequence(handler, "starting", "Step 1", "Warning", "finished");
+```
+
+## Common Testing Scenarios
+
+### Testing Message Parts (Recommended Approach)
+
+The message parts philosophy is central to jul-test-mock. Instead of testing exact log messages, test for the semantic components that matter:
+
+```java
+@ExtendWith(MockHandlerExtension.class)
+class UserServiceTest {
+    
+    @JulMock
+    MockHandler handler;
+    
+    @Test
+    void shouldLogUserLogin() {
+        Logger logger = Logger.getLogger("UserService");
+        
+        // Production code might change formatting
+        logger.info(String.format("User %s logged in from IP %s at %s", 
+            "alice", "192.168.1.100", "2024-01-15 10:30:00"));
+        
+        // Test semantic parts, not exact format
+        assertRecord(handler, 0, Level.INFO, "alice", "192.168.1.100", "logged in");
+        
+        // All these would pass even if the format changes
+        assertRecord(handler, 0, Level.INFO, "User", "alice");
+        assertRecord(handler, 0, Level.INFO, "alice", "IP");
+        assertRecord(handler, 0, Level.INFO, "logged in", "192.168");
+    }
+}
+```
+
+### Testing with Parameterized Messages
+
+JUL supports parameterized messages using MessageFormat syntax:
+
+```java
+@ExtendWith(MockHandlerExtension.class)
+class ParameterizedMessageTest {
+    
+    @JulMock
+    MockHandler handler;
+    
+    @Test
+    void shouldFormatParameterizedMessages() {
+        Logger logger = Logger.getLogger("test");
+        
+        // JUL uses {0}, {1} placeholders
+        logger.log(Level.INFO, "User {0} accessed {1} at {2}", 
+            new Object[]{"alice", "/admin", "10:30 AM"});
+        
+        // Verify formatted message
+        MockLogRecord record = handler.getRecord(0);
+        assertEquals("User alice accessed /admin at 10:30 AM", 
+            record.getFormattedMessage());
+        
+        // Or use message parts
+        assertRecord(handler, 0, Level.INFO, "alice", "/admin", "10:30");
+    }
+}
+```
+
+### Testing Multiple Records
+
+```java
+@ExtendWith(MockHandlerExtension.class)
+class MultipleRecordsTest {
+    
+    @JulMock
+    MockHandler handler;
+    
+    @Test
+    void shouldLogMultipleRecordsAndVerifyEachByIndex() {
+        Logger logger = Logger.getLogger("test");
+        
+        // Act - log multiple records with different levels
+        logger.info("Application started successfully");
+        logger.fine("Database connection pool initialized with 10 connections");
+        logger.warning("Cache miss ratio is high: 67%");
+        logger.info("User alice logged in from 192.168.1.100");
+        logger.severe("Critical system error detected in payment module");
+        
+        // Assert - verify total count first
+        assertRecordCount(handler, 5);
+        
+        // Then verify each record individually by index
+        assertRecord(handler, 0, Level.INFO, "Application started");
+        assertRecord(handler, 1, Level.FINE, "Database", "10 connections");
+        assertRecord(handler, 2, Level.WARNING, "Cache", "67%");
+        assertRecord(handler, 3, Level.INFO, "alice", "192.168.1.100");
+        assertRecord(handler, 4, Level.SEVERE, "Critical", "payment");
+    }
+}
+```
+
+### Controlling Log Levels
+
+```java
+@ExtendWith(MockHandlerExtension.class)
+class LogLevelTest {
+    
+    @JulMock(fineEnabled = false)
+    MockHandler handler;
+    
+    @Test
+    void shouldNotCaptureFineMessages() {
+        Logger logger = Logger.getLogger("test");
+        
+        logger.fine("This won't be captured");
+        logger.info("This will be captured");
+        
+        assertRecordCount(handler, 1);
+        assertRecord(handler, 0, Level.INFO, "This will be captured");
+    }
+}
+```
+
+### Verifying Record Sequences
+
+```java
+@ExtendWith(MockHandlerExtension.class)
+class WorkflowTest {
+    
+    @JulMock
+    MockHandler handler;
+    
+    @Test
+    void shouldLogWorkflowSteps() {
+        Logger logger = Logger.getLogger("test");
+        
+        logger.info("Process starting");
+        logger.fine("Step 1 completed");
+        logger.warning("Warning occurred");
+        logger.info("Process finished");
+        
+        // Verify exact sequence of levels
+        assertRecordSequence(handler, Level.INFO, Level.FINE, Level.WARNING, Level.INFO);
+        
+        // Verify sequence of message parts
+        assertRecordSequence(handler, "starting", "Step 1", "Warning", "finished");
+    }
+}
+```
+
+### Counting Records
+
+```java
+@ExtendWith(MockHandlerExtension.class)
+class RecordCountTest {
+    
+    @JulMock
+    MockHandler handler;
+    
+    @Test
+    void shouldCountRecords() {
+        Logger logger = Logger.getLogger("test");
+        
+        logger.info("Application started");
+        logger.warning("Authentication failed");
+        logger.info("Processing request");
+        logger.severe("Critical error occurred");
+        
+        // Count total records
+        assertRecordCount(handler, 4);
+        
+        // Count by level
+        assertRecordCountByLevel(handler, Level.INFO, 2);
+        assertRecordCountByLevel(handler, Level.SEVERE, 1);
+        
+        // Count by message content
+        assertRecordCountByMessage(handler, "error", 1);
+    }
+}
+```
+
+### Using Existence-Based Assertions
+
+When record order doesn't matter, use existence-based assertions:
+
+```java
+@ExtendWith(MockHandlerExtension.class)
+class ExistenceAssertionTest {
+    
+    @JulMock
+    MockHandler handler;
+    
+    @Test
+    void shouldContainExpectedRecords() {
+        Logger logger = Logger.getLogger("test");
+        
+        logger.info("User alice logged in from 127.0.0.1");
+        logger.warning("Invalid password attempt");
+        logger.severe("Database connection failed");
+        
+        // Check if any record contains specific text parts (order doesn't matter)
+        assertHasRecord(handler, Level.INFO, "alice", "127.0.0.1");
+        assertHasRecord(handler, Level.SEVERE, "Database");
+        assertHasRecord(handler, Level.WARNING, "password");
+    }
+}
+```
+
+### Testing Exception Logging
+
+```java
+@ExtendWith(MockHandlerExtension.class)
+class ExceptionLoggingTest {
+    
+    @JulMock
+    MockHandler handler;
+    
+    @Test
+    void shouldLogExceptionDetails() {
+        Logger logger = Logger.getLogger("test");
+        
+        try {
+            throw new SQLException("Connection timeout after 30 seconds");
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Database operation failed", e);
+        }
+        
+        // Test both the message and the exception
+        assertRecord(handler, 0, Level.SEVERE, "Database", "failed");
+        assertRecordWithThrowable(handler, 0, SQLException.class, "timeout", "30 seconds");
+    }
+}
+```
 
 ## Best Practices
 
-### 1. Use AssertHandler for Cleaner Tests
+### 1. Use JUnit 5 Extension for Convenience
 
 ```java
-// Good - Uses AssertLogger for cleaner code
-assertRecord(handler, 0, Level.INFO, "User logged in");
-
-// Less preferred - Manual casting and assertion
-MockLogRecord record = handler.getRecord(0);
-assertEquals(Level.INFO, record.getLevel());
-assertTrue(record.getFormattedMessage().contains("User logged in"));
-```
-
-### 2. Clear Records Between Test Methods
-
-```java
-@BeforeEach
-void setUp() {
-    handler = new MockHandler();
-    logger.addHandler(handler);
-    handler.clearRecords();
+// Recommended - automatic handler management
+@ExtendWith(MockHandlerExtension.class)
+class MyTest {
+    @JulMock MockHandler handler;
+    // No setup or cleanup needed!
 }
 ```
 
-### 3. Disable Parent Handlers
-
-```java
-// Prevent logs from propagating to parent handlers
-logger.setUseParentHandlers(false);
-```
-
-### 4. Test Different Log Levels
-
-```java
-@Test
-void testDifferentLogLevels() {
-    logger.finest("Finest message");
-    logger.finer("Finer message");
-    logger.fine("Fine message");
-    logger.config("Config message");
-    logger.info("Info message");
-    logger.warning("Warning message");
-    logger.severe("Severe message");
-    
-    assertEquals(7, handler.getRecordCount());
-    assertRecord(handler, 0, Level.FINEST, "Finest");
-    assertRecord(handler, 6, Level.SEVERE, "Severe");
-}
-```
-
-### 5. Choose the Right Assertion Type
+### 2. Choose the Right Assertion Type
 
 **Use index-based assertions** when order matters:
 ```java
-// When testing specific sequence of records
 assertRecord(handler, 0, Level.INFO, "Starting");
-assertRecord(handler, 1, Level.FINE, "Processing");
-assertRecord(handler, 2, Level.INFO, "Completed");
+assertRecord(handler, 1, Level.INFO, "Completed");
 ```
 
 **Use existence-based assertions** when order doesn't matter:
 ```java
-// When testing that records occurred, regardless of order
-assertHasRecord(handler, Level.SEVERE, "Database connection failed");
-assertHasRecord(handler, "user authentication");
+assertHasRecord(handler, Level.SEVERE, "Database", "failed");
 ```
 
 **Use counting assertions** for volume verification:
 ```java
-// When testing logging frequency or filtering
 assertRecordCount(handler, 5);
 assertRecordCountByLevel(handler, Level.SEVERE, 0); // No errors expected
-assertNoRecords(handler); // Nothing should be logged
 ```
 
 **Use sequence assertions** for workflow validation:
 ```java
-// When testing state machine transitions or process flows
 assertRecordSequence(handler, Level.INFO, Level.FINE, Level.WARNING, Level.INFO);
 ```
 
-### 6. Test Exception Logging Properly
+### 3. Test Message Parts, Not Exact Strings
 
 ```java
-@Test
-void testExceptionHandling() {
-    // Test both the message and the exception
-    logger.log(Level.SEVERE, "Operation failed", 
-        new SQLException("Connection timeout"));
-    
-    assertRecord(handler, 0, Level.SEVERE, "Operation failed");
-    assertRecordWithThrowable(handler, 0, SQLException.class, "timeout");
+// Good - tests semantic content
+assertRecord(handler, 0, Level.INFO, "User", "alice", "logged in");
+
+// Brittle - breaks when format changes
+assertRecord(handler, 0, Level.INFO, "User alice logged in at 2024-01-15 10:30:00 from 192.168.1.100");
+```
+
+### 4. Test Both Messages and Exceptions
+
+```java
+logger.log(Level.SEVERE, "Operation failed", new SQLException("Connection timeout"));
+
+assertRecord(handler, 0, Level.SEVERE, "Operation failed");
+assertRecordWithThrowable(handler, 0, SQLException.class, "Connection", "timeout");
+```
+
+### 5. Disable Parent Handlers in Tests
+
+```java
+@BeforeEach
+void setUp() {
+    logger = Logger.getLogger("test");
+    logger.setUseParentHandlers(false); // Prevent console output during tests
+    logger.addHandler(handler);
 }
 ```
 
-### 7. Validate Record Counts for Performance
+### 6. Validate Record Counts for Performance
 
 ```java
 @Test
-void testMinimalLogging() {
+void shouldLogMinimally() {
     // Ensure production code doesn't log excessively
     performOperation();
     
@@ -548,14 +562,22 @@ While `jul-test-mock` is inspired by `slf4j-test-mock`, there are some key diffe
 
 ## Thread Safety
 
-This mock implementation is designed for single-threaded test environments. If you need to test multi-threaded logging scenarios, ensure proper synchronization in your test code.
-You may run tests in parallel as long as each test uses its own logger and handler instances.
+This mock implementation is designed for single-threaded test environments. For parallel test execution, use unique logger names per test class or method.
 
 ## Requirements
 
 - Java 8 or higher
-- JUnit 5 (for assertion utilities)
+- JUnit 5 (for JUnit extension and assertion utilities)
 - Lombok (build-time dependency for code generation)
+
+## Documentation
+
+For more detailed information about the implementation and advanced topics:
+
+- **[TDR-0001: In-Memory Event Storage](doc/TDR-0001-in-memory-event-storage.md)** - Why ArrayList for record storage
+- **[TDR-0002: Use of JUnit5 Assertions](doc/TDR-0002-use-of-junit5-assertions.md)** - Why JUnit Jupiter assertions
+- **[TDR-0003: Focus on JUL Handler Interface](doc/TDR-0003-focus-on-jul-handler-interface.md)** - Design philosophy
+- **[TDR-0004: JUnit Extension for Debug Logging](doc/TDR-0004-junit-extension-for-debug-logging.md)** - Debug output on test failures
 
 ## License
 
