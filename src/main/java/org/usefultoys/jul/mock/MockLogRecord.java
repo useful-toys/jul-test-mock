@@ -49,6 +49,7 @@ import java.util.logging.LogRecord;
 @ToString(includeFieldNames = true)
 public class MockLogRecord {
 
+    private final int recordIndex;
     private final String loggerName;
     private final Level level;
     private final String message;
@@ -68,9 +69,11 @@ public class MockLogRecord {
      * This constructor creates an immutable snapshot of the provided LogRecord,
      * capturing all relevant information at the time of logging.
      *
+     * @param recordIndex the index of this record in the handler's list
      * @param record the JUL LogRecord to wrap
      */
-    public MockLogRecord(final LogRecord record) {
+    public MockLogRecord(final int recordIndex, final LogRecord record) {
+        this.recordIndex = recordIndex;
         this.loggerName = record.getLoggerName();
         this.level = record.getLevel();
         this.message = record.getMessage();
