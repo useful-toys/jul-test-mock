@@ -211,4 +211,30 @@ class MockLogRecordTest {
         assertEquals("test.bundle", mockRecord.getResourceBundleName(),
                 "should have correct resource bundle name");
     }
+
+    @Test
+    @DisplayName("should handle invalid message format")
+    void shouldHandleInvalidMessageFormat() {
+        final LogRecord logRecord = new LogRecord(Level.INFO, "Invalid format '{'");
+        logRecord.setParameters(new Object[]{"test"});
+
+        final MockLogRecord mockRecord = new MockLogRecord(0, logRecord);
+
+        assertEquals("Invalid format '{'", mockRecord.getFormattedMessage(),
+            "should return original message on format exception");
+    }
+
+    @Test
+    @DisplayName("should produce a descriptive toString representation")
+    void shouldProduceDescriptiveToString() {
+        final LogRecord logRecord = new LogRecord(Level.INFO, "Test message");
+        logRecord.setLoggerName("test.logger");
+        logRecord.setSourceClassName("com.example.TestClass");
+        logRecord.setSourceMethodName("testMethod");
+
+        final MockLogRecord mockRecord = new MockLogRecord(0, logRecord);
+        final String expectedString = "MockLogRecord(recordIndex=0, loggerName=test.logger, level=INFO, message=Test message, parameters=null, thrown=null, sourceClassName=com.example.TestClass, sourceMethodName=testMethod, millis=" + mockRecord.getMillis() + ", sequenceNumber=" + mockRecord.getSequenceNumber() + ", threadID=" + mockRecord.getThreadID() + ", resourceBundle=null, resourceBundleName=null)";
+
+        assertEquals(expectedString, mockRecord.toString(), "toString() should be descriptive");
+    }
 }
