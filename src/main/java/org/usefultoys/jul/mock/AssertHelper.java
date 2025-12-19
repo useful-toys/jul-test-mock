@@ -66,8 +66,8 @@ class AssertHelper {
     void assertMessageParts(final MockLogRecord record, final String[] messageParts) {
         final boolean hasAllParts = hasAllMessageParts(record, messageParts);
         Assertions.assertTrue(hasAllParts,
-                String.format("should contain all expected message parts; expected parts: %s; actual message: %s",
-                        String.join(", ", messageParts), record.getFormattedMessage()));
+                String.format("should contain all expected message parts at recordIndex %d; expected parts: %s; actual message: %s",
+                        record.getRecordIndex(), String.join(", ", messageParts), record.getFormattedMessage()));
     }
 
     /**
@@ -80,8 +80,8 @@ class AssertHelper {
     void assertMessagePartsNot(final MockLogRecord record, final String[] messageParts) {
         final boolean hasAllParts = hasAllMessageParts(record, messageParts);
         Assertions.assertFalse(hasAllParts,
-                String.format("should not contain all expected message parts; unexpected parts: %s; actual message: %s",
-                        String.join(", ", messageParts), record.getFormattedMessage()));
+                String.format("should not contain all expected message parts at recordIndex %d; unexpected parts: %s; actual message: %s",
+                        record.getRecordIndex(), String.join(", ", messageParts), record.getFormattedMessage()));
     }
 
     /**
@@ -93,7 +93,8 @@ class AssertHelper {
      */
     void assertLevel(final MockLogRecord record, final Level expectedLevel) {
         Assertions.assertSame(expectedLevel, record.getLevel(),
-                String.format("should have expected log level; expected: %s, actual: %s", expectedLevel, record.getLevel()));
+                String.format("should have expected log level at recordIndex %d; expected: %s, actual: %s",
+                        record.getRecordIndex(), expectedLevel, record.getLevel()));
     }
 
     /**
@@ -105,7 +106,8 @@ class AssertHelper {
      */
     void assertLevelNot(final MockLogRecord record, final Level unexpectedLevel) {
         Assertions.assertNotSame(unexpectedLevel, record.getLevel(),
-                String.format("should not have unexpected log level; unexpected: %s", unexpectedLevel));
+                String.format("should not have unexpected log level at recordIndex %d; unexpected: %s",
+                        record.getRecordIndex(), unexpectedLevel));
     }
 
     /**
@@ -117,10 +119,11 @@ class AssertHelper {
      * @throws AssertionError if the throwable is null or not of the expected type.
      */
     void assertThrowableOfInstance(final MockLogRecord record, final Throwable throwable, final Class<? extends Throwable> expectedThrowableClass) {
-        Assertions.assertNotNull(throwable, "should have a throwable");
+        Assertions.assertNotNull(throwable,
+                String.format("should have a throwable at recordIndex %d", record.getRecordIndex()));
         Assertions.assertTrue(expectedThrowableClass.isInstance(throwable),
-                String.format("should have expected throwable type; expected: %s, actual: %s",
-                        expectedThrowableClass.getName(), throwable.getClass().getName()));
+                String.format("should have expected throwable type at recordIndex %d; expected: %s, actual: %s",
+                        record.getRecordIndex(), expectedThrowableClass.getName(), throwable.getClass().getName()));
     }
 
     /**
@@ -135,8 +138,8 @@ class AssertHelper {
     void assertThrowableNotOfInstance(final MockLogRecord record, final Throwable throwable, final Class<? extends Throwable> unexpectedThrowableClass) {
         if (throwable != null) {
             Assertions.assertFalse(unexpectedThrowableClass.isInstance(throwable),
-                    String.format("should not have unexpected throwable type; unexpected: %s, actual: %s",
-                            unexpectedThrowableClass.getName(), throwable.getClass().getName()));
+                    String.format("should not have unexpected throwable type at recordIndex %d; unexpected: %s, actual: %s",
+                            record.getRecordIndex(), unexpectedThrowableClass.getName(), throwable.getClass().getName()));
         }
     }
 
@@ -151,7 +154,8 @@ class AssertHelper {
     void assertThrowableHasMessageParts(final MockLogRecord record, final Throwable throwable, final String[] throwableMessageParts) {
         final boolean hasAllParts = hasAllMessageParts(throwable, throwableMessageParts);
         Assertions.assertTrue(hasAllParts,
-                String.format("should contain all expected message parts in throwable; expected parts: %s; actual message: %s", String.join(", ", throwableMessageParts), throwable));
+                String.format("should contain all expected message parts in throwable at recordIndex %d; expected parts: %s; actual message: %s",
+                        record.getRecordIndex(), String.join(", ", throwableMessageParts), throwable));
     }
 
     /**
@@ -167,7 +171,8 @@ class AssertHelper {
         if (throwable != null) {
             final boolean hasAllParts = hasAllMessageParts(throwable, throwableMessageParts);
             Assertions.assertFalse(hasAllParts,
-                    String.format("should not contain all expected message parts in throwable; unexpected parts: %s; actual message: %s", String.join(", ", throwableMessageParts), throwable));
+                    String.format("should not contain all expected message parts in throwable at recordIndex %d; unexpected parts: %s; actual message: %s",
+                            record.getRecordIndex(), String.join(", ", throwableMessageParts), throwable));
         }
     }
 

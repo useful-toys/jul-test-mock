@@ -91,7 +91,7 @@ public class MockHandler extends Handler {
             return;
         }
 
-        final MockLogRecord mockRecord = new MockLogRecord(record);
+        final MockLogRecord mockRecord = new MockLogRecord(logRecords.size(), record);
         logRecords.add(mockRecord);
         print(mockRecord);
     }

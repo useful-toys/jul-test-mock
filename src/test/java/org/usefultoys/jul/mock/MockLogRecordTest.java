@@ -34,11 +34,26 @@ class MockLogRecordTest {
         final LogRecord logRecord = new LogRecord(Level.INFO, "Test message");
         logRecord.setLoggerName("test.logger");
 
-        final MockLogRecord mockRecord = new MockLogRecord(logRecord);
+        final MockLogRecord mockRecord = new MockLogRecord(0, logRecord);
 
         assertEquals("test.logger", mockRecord.getLoggerName(), "should have correct logger name");
         assertEquals(Level.INFO, mockRecord.getLevel(), "should have correct level");
         assertEquals("Test message", mockRecord.getMessage(), "should have correct message");
+        assertEquals(0, mockRecord.getRecordIndex(), "should have correct record index");
+    }
+
+    @Test
+    @DisplayName("should capture record index")
+    void shouldCaptureRecordIndex() {
+        final LogRecord logRecord = new LogRecord(Level.INFO, "Test message");
+        
+        final MockLogRecord mockRecord1 = new MockLogRecord(0, logRecord);
+        final MockLogRecord mockRecord2 = new MockLogRecord(5, logRecord);
+        final MockLogRecord mockRecord3 = new MockLogRecord(42, logRecord);
+
+        assertEquals(0, mockRecord1.getRecordIndex(), "should have record index 0");
+        assertEquals(5, mockRecord2.getRecordIndex(), "should have record index 5");
+        assertEquals(42, mockRecord3.getRecordIndex(), "should have record index 42");
     }
 
     @Test
@@ -47,7 +62,7 @@ class MockLogRecordTest {
         final LogRecord logRecord = new LogRecord(Level.INFO, "User {0} logged in from {1}");
         logRecord.setParameters(new Object[]{"john", "192.168.1.1"});
 
-        final MockLogRecord mockRecord = new MockLogRecord(logRecord);
+        final MockLogRecord mockRecord = new MockLogRecord(0, logRecord);
 
         assertEquals("User john logged in from 192.168.1.1", mockRecord.getFormattedMessage(),
                 "should format message with parameters");
@@ -58,7 +73,7 @@ class MockLogRecordTest {
     void shouldHandleMessageWithoutParameters() {
         final LogRecord logRecord = new LogRecord(Level.INFO, "Simple message");
 
-        final MockLogRecord mockRecord = new MockLogRecord(logRecord);
+        final MockLogRecord mockRecord = new MockLogRecord(0, logRecord);
 
         assertEquals("Simple message", mockRecord.getFormattedMessage(),
                 "should return message as-is when no parameters");
@@ -71,7 +86,7 @@ class MockLogRecordTest {
         final LogRecord logRecord = new LogRecord(Level.SEVERE, "Error occurred");
         logRecord.setThrown(exception);
 
-        final MockLogRecord mockRecord = new MockLogRecord(logRecord);
+        final MockLogRecord mockRecord = new MockLogRecord(0, logRecord);
 
         assertNotNull(mockRecord.getThrown(), "should have throwable");
         assertEquals("Test exception", mockRecord.getThrown().getMessage(),
@@ -85,7 +100,7 @@ class MockLogRecordTest {
         logRecord.setSourceClassName("com.example.TestClass");
         logRecord.setSourceMethodName("testMethod");
 
-        final MockLogRecord mockRecord = new MockLogRecord(logRecord);
+        final MockLogRecord mockRecord = new MockLogRecord(0, logRecord);
 
         assertEquals("com.example.TestClass", mockRecord.getSourceClassName(),
                 "should have correct source class name");
@@ -100,7 +115,7 @@ class MockLogRecordTest {
         final long expectedMillis = logRecord.getMillis();
         final long expectedSequence = logRecord.getSequenceNumber();
 
-        final MockLogRecord mockRecord = new MockLogRecord(logRecord);
+        final MockLogRecord mockRecord = new MockLogRecord(0, logRecord);
 
         assertEquals(expectedMillis, mockRecord.getMillis(), "should have correct timestamp");
         assertEquals(expectedSequence, mockRecord.getSequenceNumber(), "should have correct sequence number");
@@ -111,7 +126,7 @@ class MockLogRecordTest {
     void shouldHandleNullMessage() {
         final LogRecord logRecord = new LogRecord(Level.INFO, null);
 
-        final MockLogRecord mockRecord = new MockLogRecord(logRecord);
+        final MockLogRecord mockRecord = new MockLogRecord(0, logRecord);
 
         assertNull(mockRecord.getMessage(), "should have null message");
         assertNull(mockRecord.getFormattedMessage(), "should have null formatted message");
@@ -123,7 +138,7 @@ class MockLogRecordTest {
         final LogRecord logRecord = new LogRecord(Level.INFO, "User {0} logged in");
         logRecord.setParameters(new Object[]{});
 
-        final MockLogRecord mockRecord = new MockLogRecord(logRecord);
+        final MockLogRecord mockRecord = new MockLogRecord(0, logRecord);
 
         assertEquals("User {0} logged in", mockRecord.getFormattedMessage(),
                 "should return original message when parameters don't match");

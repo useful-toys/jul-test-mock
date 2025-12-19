@@ -36,7 +36,7 @@ class AssertHelperTest {
         final LogRecord logRecord = new LogRecord(level, message);
         logRecord.setLoggerName("test-logger");
         logRecord.setThrown(throwable);
-        return new MockLogRecord(logRecord);
+        return new MockLogRecord(0, logRecord);
     }
 
     @Nested
