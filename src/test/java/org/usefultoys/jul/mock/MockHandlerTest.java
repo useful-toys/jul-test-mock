@@ -197,4 +197,68 @@ class MockHandlerTest {
         assertEquals(1, handler.getRecordCount(), "should capture record with empty message");
         assertEquals("", handler.getRecord(0).getFormattedMessage(), "should have empty message");
     }
+
+    @Test
+    @DisplayName("should call flush without errors")
+    void shouldCallFlushWithoutErrors() {
+        logger.info("Test message");
+        handler.flush();
+        assertEquals(1, handler.getRecordCount(), "should still have record after flush");
+    }
+
+    @Test
+    @DisplayName("should clear records when closed")
+    void shouldClearRecordsWhenClosed() {
+        logger.info("Test message");
+        assertEquals(1, handler.getRecordCount(), "should have one record before close");
+
+        handler.close();
+        assertEquals(0, handler.getRecordCount(), "should have no records after close");
+    }
+
+    @Test
+    @DisplayName("should enable and disable stdout")
+    void shouldEnableAndDisableStdout() {
+        handler.setStdoutEnabled(true);
+        assertTrue(handler.isStdoutEnabled(), "should enable stdout");
+
+        handler.setStdoutEnabled(false);
+        assertTrue(!handler.isStdoutEnabled(), "should disable stdout");
+    }
+
+    @Test
+    @DisplayName("should enable and disable stderr")
+    void shouldEnableAndDisableStderr() {
+        handler.setStderrEnabled(true);
+        assertTrue(handler.isStderrEnabled(), "should enable stderr");
+
+        handler.setStderrEnabled(false);
+        assertTrue(!handler.isStderrEnabled(), "should disable stderr");
+    }
+
+    @Test
+    @DisplayName("should print to stdout when enabled")
+    void shouldPrintToStdoutWhenEnabled() {
+        handler.setStdoutEnabled(true);
+        logger.info("Info message to stdout");
+        assertEquals(1, handler.getRecordCount(), "should still capture the message");
+    }
+
+    @Test
+    @DisplayName("should print to stderr when enabled")
+    void shouldPrintToStderrWhenEnabled() {
+        handler.setStderrEnabled(true);
+        logger.warning("Warning message to stderr");
+        logger.severe("Severe message to stderr");
+        assertEquals(2, handler.getRecordCount(), "should capture both messages");
+    }
+
+    @Test
+    @DisplayName("should format log statement with throwable")
+    void shouldFormatLogStatementWithThrowable() {
+        handler.setStderrEnabled(true);
+        final RuntimeException ex = new RuntimeException("Test error");
+        logger.log(Level.SEVERE, "Error occurred", ex);
+        assertEquals(1, handler.getRecordCount(), "should capture message with throwable");
+    }
 }
