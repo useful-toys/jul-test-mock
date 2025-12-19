@@ -21,7 +21,6 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
-import java.sql.SQLException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -416,11 +415,26 @@ class AssertLoggerTest {
         }
 
         @Test
+        @DisplayName("should pass when any record has expected throwable type and all message parts")
+        void shouldPassWhenAnyRecordHasExpectedThrowableTypeAndAllMessageParts() {
+            logger.log(Level.SEVERE, "Database error", new RuntimeException("Connection failed after timeout"));
+            assertHasRecordWithThrowable(handler, RuntimeException.class, "Connection", "failed", "timeout");
+        }
+
+        @Test
         @DisplayName("should throw when no record has matching throwable type and message")
         void shouldThrowWhenNoRecordHasMatchingThrowableTypeAndMessage() {
             logger.log(Level.SEVERE, "Error 1", new RuntimeException("Different message"));
             logger.log(Level.SEVERE, "Error 2", new IOException("Connection failed"));
             final AssertionError error = assertThrows(AssertionError.class, () -> assertHasRecordWithThrowable(handler, RuntimeException.class, "Connection"));
+            assertTrue(error.getMessage().contains("should have at least one record"));
+        }
+
+        @Test
+        @DisplayName("should throw when throwable message does not contain all parts")
+        void shouldThrowWhenThrowableMessageDoesNotContainAllParts() {
+            logger.log(Level.SEVERE, "Error", new RuntimeException("Connection failed"));
+            final AssertionError error = assertThrows(AssertionError.class, () -> assertHasRecordWithThrowable(handler, RuntimeException.class, "Connection", "timeout"));
             assertTrue(error.getMessage().contains("should have at least one record"));
         }
 
