@@ -20,6 +20,12 @@ The project is built with Maven and uses the Maven wrapper for all builds.
 - **Repository**: GitHub
 - **CI/CD**: GitHub Actions for validation, build, testing, and deployment to Maven Central and GitHub Releases
 
+### Development Environment
+- **JDK**: 21
+- **Terminal**: PowerShell (Windows) or equivalent shell (Unix/Linux/macOS)
+- **IDEs**: IntelliJ IDEA, VS Code, GitHub Codespaces
+- **Version Control**: Git
+
 ### Build Profiles
 **Task-Specific Profiles**:
 - **release**: Generates Javadoc JAR, sources JAR, signs artifacts, and deploys to Maven Central
