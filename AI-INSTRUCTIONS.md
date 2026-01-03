@@ -21,7 +21,7 @@ The project is built with Maven and uses the Maven wrapper for all builds.
 - **CI/CD**: GitHub Actions for validation, build, testing, and deployment to Maven Central and GitHub Releases
 
 ### Development Environment
-- **JDK**: 21
+- **JDK**: 21 (locate in the `.jdks` directory in the home directory and use the latest version of 21 available in that directory)
 - **Terminal**: PowerShell (Windows) or equivalent shell (Unix/Linux/macOS)
 - **IDEs**: IntelliJ IDEA, VS Code, GitHub Codespaces
 - **Version Control**: Git
