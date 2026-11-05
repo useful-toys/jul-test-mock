@@ -149,7 +149,11 @@ jobs:
         run: python3 .github/scripts/sarif_report.py normalize target/checkstyle-result.sarif target/pmd.sarif.json target/spotbugsSarif.json
 
       - name: Publish summary
-        run: python3 .github/scripts/sarif_report.py markdown target/checkstyle-result.sarif target/pmd.sarif.json target/spotbugsSarif.json | tee -a "$GITHUB_STEP_SUMMARY" > target/sarif-summary.md
+        run: |
+          {
+            python3 .github/scripts/sarif_report.py markdown target/checkstyle-result.sarif target/pmd.sarif.json target/spotbugsSarif.json
+            python3 .github/scripts/sarif_report.py coverage target/site/jacoco/jacoco.xml
+          } | tee -a "$GITHUB_STEP_SUMMARY" > target/sarif-summary.md
 
       - name: Upload SARIF to Code Scanning (Checkstyle)
         # Fork PRs get a read-only token, so skip the steps that need write access.

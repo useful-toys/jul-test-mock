@@ -4,6 +4,7 @@
 normalize SARIF...   Rewrites absolute file URIs to repository-relative paths, in place.
                      GitHub Code Scanning only maps alerts to files when the paths are relative.
 markdown SARIF...    Prints a markdown summary (counts per tool/level and top rules) to stdout.
+coverage JACOCO_XML  Prints a markdown coverage summary (total and per package) to stdout.
 """
 import json
 import os
@@ -11,6 +12,7 @@ import sys
 from collections import Counter
 from pathlib import Path
 from urllib.parse import unquote, urlparse
+from xml.etree import ElementTree
 
 TOP_RULES = 10
 
@@ -74,10 +76,39 @@ def markdown(paths):
         print(block + "\n")
 
 
+def percent(counter):
+    covered, missed = int(counter.get("covered")), int(counter.get("missed"))
+    total = covered + missed
+    return "n/a" if total == 0 else f"{100 * covered / total:.1f}% ({covered}/{total})"
+
+
+def coverage(paths):
+    """Prints a markdown coverage summary from a JaCoCo XML report."""
+    report = ElementTree.parse(paths[0]).getroot()
+    totals = {c.get("type"): c for c in report.findall("counter")}
+    print("## Test coverage (JaCoCo)\n")
+    print("| Instructions | Branches | Lines | Methods |")
+    print("|---:|---:|---:|---:|")
+    print("| " + " | ".join(percent(totals[t]) if t in totals else "n/a"
+                            for t in ("INSTRUCTION", "BRANCH", "LINE", "METHOD")) + " |\n")
+    packages = report.findall("package")
+    if packages:
+        rows = []
+        for package in packages:
+            counters = {c.get("type"): c for c in package.findall("counter")}
+            name = package.get("name", "").replace("/", ".")
+            rows.append(f"| `{name}` | " + " | ".join(percent(counters[t]) if t in counters else "n/a"
+                                                     for t in ("LINE", "BRANCH")) + " |")
+        print("<details><summary>Coverage per package</summary>\n")
+        print("| Package | Lines | Branches |\n|---|---:|---:|")
+        print("\n".join(rows) + "\n\n</details>\n")
+
+
 def main(argv):
-    if len(argv) < 3 or argv[1] not in ("normalize", "markdown"):
+    commands = {"normalize": normalize, "markdown": markdown, "coverage": coverage}
+    if len(argv) < 3 or argv[1] not in commands:
         sys.exit(__doc__)
-    {"normalize": normalize, "markdown": markdown}[argv[1]](argv[2:])
+    commands[argv[1]](argv[2:])
 
 
 if __name__ == "__main__":
