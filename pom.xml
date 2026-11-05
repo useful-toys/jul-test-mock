@@ -77,7 +77,8 @@
         <maven-pmd-plugin.version>3.28.0</maven-pmd-plugin.version>
         <spotbugs-maven-plugin.version>4.9.3.0</spotbugs-maven-plugin.version>
         <findsecbugs-plugin.version>1.14.0</findsecbugs-plugin.version>
-        <dependency-check-maven.version>13.0.0</dependency-check-maven.version>
+        <!-- 13.0.0 fails without an NVD API key ("Invalid API Key, length of 0"); 12.x works without one. -->
+        <dependency-check-maven.version>12.2.2</dependency-check-maven.version>
     </properties>
 
 
@@ -270,8 +271,10 @@
         <!-- Dependency Check Profile - scans dependencies for known vulnerabilities (CVEs) with
              OWASP Dependency-Check and writes a SARIF report to target/ (informative, never fails the build).
              Kept apart from 'static-analysis' because the first run downloads the whole NVD database.
-             Set the NVD_API_KEY environment variable; without it the download is much slower.
-             Run with: mvn -P dependency-check dependency-check:check -->
+             Run with: mvn -P dependency-check dependency-check:check
+             An NVD API key makes the download much faster. With the key in the NVD_API_KEY
+             environment variable, add: -DnvdApiKeyEnvironmentVariable=NVD_API_KEY
+             (not configured here: if the variable is missing, the plugin fails on an empty key). -->
         <profile>
             <id>dependency-check</id>
             <build>
@@ -281,7 +284,6 @@
                         <artifactId>dependency-check-maven</artifactId>
                         <version>${dependency-check-maven.version}</version>
                         <configuration>
-                            <nvdApiKeyEnvironmentVariable>NVD_API_KEY</nvdApiKeyEnvironmentVariable>
                             <!-- Outside ~/.m2/repository so CI can cache it apart from the Maven cache. -->
                             <dataDirectory>${user.home}/.dependency-check-data</dataDirectory>
                             <formats>
