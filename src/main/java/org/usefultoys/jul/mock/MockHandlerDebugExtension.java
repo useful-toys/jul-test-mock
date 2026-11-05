@@ -98,7 +98,7 @@ public class MockHandlerDebugExtension implements InvocationInterceptor {
     private static List<MockHandler> findMockHandlers(
             final ReflectiveInvocationContext<Method> invocationContext,
             final ExtensionContext extensionContext) {
-        
+
         final List<MockHandler> mockHandlers = new ArrayList<>(5);
 
         // First, check method parameters

@@ -47,9 +47,9 @@ import java.util.stream.Collectors;
  * MockHandler handler = new MockHandler();
  * logger.addHandler(handler);
  * logger.setUseParentHandlers(false);
- * 
+ *
  * logger.info("Sample message");
- * 
+ *
  * assertEquals(1, handler.getRecordCount());
  * assertTrue(handler.getRecord(0).getFormattedMessage().contains("Sample"));
  * }</pre>

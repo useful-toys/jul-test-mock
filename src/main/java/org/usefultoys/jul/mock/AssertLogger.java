@@ -33,7 +33,7 @@ import java.util.logging.Level;
  * MockHandler handler = new MockHandler();
  * logger.addHandler(handler);
  * logger.info("Test message");
- * 
+ *
  * AssertLogger.assertRecord(handler, 0, Level.INFO, "Test message");
  * }</pre>
  *
