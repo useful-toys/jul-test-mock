@@ -20,8 +20,15 @@ def load(path):
         return json.load(f)
 
 
+SOURCE_ROOTS = ("src/main/java", "src/test/java")
+
+
 def relative_uri(uri, root):
     if not uri.startswith("file:"):
+        # Some tools (SpotBugs) report paths relative to a source root, not to the repository.
+        for source_root in SOURCE_ROOTS:
+            if (root / source_root / uri).is_file():
+                return f"{source_root}/{uri}"
         return uri
     local = unquote(urlparse(uri).path)
     if len(local) > 2 and local[0] == "/" and local[2] == ":":  # file:/C:/dir on Windows
