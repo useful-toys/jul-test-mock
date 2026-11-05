@@ -46,7 +46,7 @@ class MockLogRecordTest {
     @DisplayName("should capture record index")
     void shouldCaptureRecordIndex() {
         final LogRecord logRecord = new LogRecord(Level.INFO, "Test message");
-        
+
         final MockLogRecord mockRecord1 = new MockLogRecord(0, logRecord);
         final MockLogRecord mockRecord2 = new MockLogRecord(5, logRecord);
         final MockLogRecord mockRecord3 = new MockLogRecord(42, logRecord);

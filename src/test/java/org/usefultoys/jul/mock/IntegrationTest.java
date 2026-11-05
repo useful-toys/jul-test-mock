@@ -58,7 +58,7 @@ class IntegrationTest {
         assertRecordCount(handler, 4);
         assertRecordSequence(handler, Level.INFO, Level.FINE, Level.FINE, Level.INFO);
         assertRecordSequence(handler, "started", "Validating", "Checking", "successful");
-        
+
         // Verify specific messages
         assertHasRecord(handler, "admin");
         assertHasRecord(handler, Level.FINE, "credentials");
@@ -80,10 +80,10 @@ class IntegrationTest {
         assertRecordCountByLevel(handler, Level.FINE, 1);
         assertRecordCountByLevel(handler, Level.WARNING, 1);
         assertRecordCountByLevel(handler, Level.SEVERE, 1);
-        
+
         // Verify error message contains line number
         assertHasRecord(handler, Level.WARNING, "line 42");
-        
+
         // Verify exception was logged
         assertHasRecordWithThrowable(handler, IOException.class, "corrupted");
     }
@@ -93,22 +93,22 @@ class IntegrationTest {
     void shouldTestBatchProcessingPerformanceLogging() {
         // Simulate batch processing
         logger.info("Batch processing started");
-        
+
         for (int i = 1; i <= 5; i++) {
             logger.log(Level.FINE, "Processing batch {0} of 5", i);
         }
-        
+
         logger.info("Batch processing completed");
 
         // Verify batch processing logs
         assertRecordCount(handler, 7);
         assertRecordCountByLevel(handler, Level.INFO, 2);
         assertRecordCountByLevel(handler, Level.FINE, 5);
-        
+
         // Verify start and end messages
         assertRecord(handler, 0, Level.INFO, "started");
         assertRecord(handler, 6, Level.INFO, "completed");
-        
+
         // Verify all batches were logged
         assertRecordCountByMessage(handler, "Processing batch", 5);
     }
@@ -126,10 +126,10 @@ class IntegrationTest {
         // Verify configuration messages
         assertRecordCount(handler, 5);
         assertRecordCountByLevel(handler, Level.WARNING, 2);
-        
+
         // Verify warnings mention default values
         assertRecordCountByMessage(handler, "using default", 2);
-        
+
         // Verify both parameters are mentioned
         assertHasRecord(handler, "maxConnections");
         assertHasRecord(handler, "timeout");
@@ -149,10 +149,10 @@ class IntegrationTest {
         // Verify transaction lifecycle
         assertRecordSequence(handler,
             "started", "step 1", "step 2", "Constraint", "Rolling back", "failed");
-        
+
         // Verify transaction ID appears in key messages
         assertRecordCountByMessage(handler, "TX-12345", 3);
-        
+
         // Verify severity escalation
         assertRecordCountByLevel(handler, Level.INFO, 2);
         assertRecordCountByLevel(handler, Level.FINE, 2);
@@ -175,11 +175,11 @@ class IntegrationTest {
         assertRecordCount(handler, 6);
         assertRecord(handler, 0, Level.INFO, "Starting");
         assertRecord(handler, 5, Level.INFO, "started successfully");
-        
+
         // Verify configuration details
         assertHasRecord(handler, Level.CONFIG, "8080");
         assertHasRecord(handler, Level.CONFIG, "10");
-        
+
         // Verify initialization steps
         assertHasRecord(handler, Level.FINE, "database");
         assertHasRecord(handler, Level.FINE, "cache");

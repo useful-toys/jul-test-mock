@@ -154,7 +154,7 @@ class HandlerRecordFormatterTest {
         final String formatted = HandlerRecordFormatter.formatLoggedRecords(handler);
 
         assertTrue(formatted.contains("Total records: 1"), "should show total count");
-        assertTrue(formatted.contains("User john logged in from 192.168.1.1"), 
+        assertTrue(formatted.contains("User john logged in from 192.168.1.1"),
                 "should show formatted message with parameters");
     }
 }

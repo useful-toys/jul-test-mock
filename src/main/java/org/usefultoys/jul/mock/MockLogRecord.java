@@ -98,7 +98,7 @@ public class MockLogRecord {
      */
     public String getFormattedMessage() {
         String msg = message;
-        
+
         if (resourceBundle != null && message != null) {
             try {
                 msg = resourceBundle.getString(message);
@@ -106,7 +106,7 @@ public class MockLogRecord {
                 msg = message;
             }
         }
-        
+
         if (parameters != null && parameters.length > 0 && msg != null) {
             try {
                 msg = MessageFormat.format(msg, parameters);
@@ -114,7 +114,7 @@ public class MockLogRecord {
                 return msg;
             }
         }
-        
+
         return msg;
     }
 }

@@ -60,7 +60,7 @@ public final class HandlerRecordFormatter {
             sb.append(String.format(" | %s%n", record.getFormattedMessage()));
 
             if (record.getThrown() != null) {
-                sb.append(String.format("        └─ throwable: %s: %s%n", 
+                sb.append(String.format("        └─ throwable: %s: %s%n",
                     record.getThrown().getClass().getSimpleName(),
                     record.getThrown().getMessage()));
             }
