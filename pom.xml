@@ -74,6 +74,7 @@
         <maven-gpg-plugin.version>3.2.8</maven-gpg-plugin.version>
         <maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
         <checkstyle.version>10.26.1</checkstyle.version>
+        <maven-pmd-plugin.version>3.28.0</maven-pmd-plugin.version>
     </properties>
 
 
@@ -202,6 +203,30 @@
                                 <phase>verify</phase>
                                 <goals>
                                     <goal>checkstyle</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-pmd-plugin</artifactId>
+                        <version>${maven-pmd-plugin.version}</version>
+                        <configuration>
+                            <rulesets>
+                                <ruleset>${project.basedir}/pmd-ruleset.xml</ruleset>
+                            </rulesets>
+                            <!-- maven-pmd-plugin has no built-in 'sarif' format; use PMD's renderer class. -->
+                            <format>net.sourceforge.pmd.renderers.SarifRenderer</format>
+                            <includeTests>true</includeTests>
+                            <failOnViolation>false</failOnViolation>
+                            <printFailingErrors>false</printFailingErrors>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>pmd-sarif</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>pmd</goal>
                                 </goals>
                             </execution>
                         </executions>
