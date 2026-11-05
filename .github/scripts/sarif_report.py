@@ -1,0 +1,77 @@
+#!/usr/bin/env python3
+"""Helpers for the SARIF reports produced by the static-analysis Maven profile.
+
+normalize SARIF...   Rewrites absolute file URIs to repository-relative paths, in place.
+                     GitHub Code Scanning only maps alerts to files when the paths are relative.
+markdown SARIF...    Prints a markdown summary (counts per tool/level and top rules) to stdout.
+"""
+import json
+import os
+import sys
+from collections import Counter
+from pathlib import Path
+from urllib.parse import unquote, urlparse
+
+TOP_RULES = 10
+
+
+def load(path):
+    with open(path, encoding="utf-8") as f:
+        return json.load(f)
+
+
+def relative_uri(uri, root):
+    if not uri.startswith("file:"):
+        return uri
+    local = unquote(urlparse(uri).path)
+    if len(local) > 2 and local[0] == "/" and local[2] == ":":  # file:/C:/dir on Windows
+        local = local[1:]
+    try:
+        return Path(local).resolve().relative_to(root).as_posix()
+    except ValueError:
+        return uri
+
+
+def normalize(paths):
+    root = Path(os.environ.get("GITHUB_WORKSPACE", os.getcwd())).resolve()
+    for path in paths:
+        sarif = load(path)
+        for run in sarif.get("runs", []):
+            for result in run.get("results", []):
+                for location in result.get("locations", []):
+                    artifact = location.get("physicalLocation", {}).get("artifactLocation", {})
+                    if "uri" in artifact:
+                        artifact["uri"] = relative_uri(artifact["uri"], root)
+        with open(path, "w", encoding="utf-8") as f:
+            json.dump(sarif, f)
+
+
+def markdown(paths):
+    print("## Static analysis (SARIF)\n")
+    print("| Tool | Error | Warning | Note | Total |")
+    print("|---|---:|---:|---:|---:|")
+    details = []
+    for path in paths:
+        for run in load(path).get("runs", []):
+            driver = run.get("tool", {}).get("driver", {})
+            name = driver.get("name", Path(path).stem)
+            results = run.get("results", [])
+            levels = Counter(r.get("level", "warning") for r in results)
+            print(f"| {name} | {levels['error']} | {levels['warning']} | {levels['note']} | {len(results)} |")
+            rules = Counter(r.get("ruleId", "?") for r in results).most_common(TOP_RULES)
+            if rules:
+                rows = "\n".join(f"| `{rule}` | {count} |" for rule, count in rules)
+                details.append(f"<details><summary>{name}: top rules</summary>\n\n| Rule | Count |\n|---|---:|\n{rows}\n\n</details>")
+    print()
+    for block in details:
+        print(block + "\n")
+
+
+def main(argv):
+    if len(argv) < 3 or argv[1] not in ("normalize", "markdown"):
+        sys.exit(__doc__)
+    {"normalize": normalize, "markdown": markdown}[argv[1]](argv[2:])
+
+
+if __name__ == "__main__":
+    main(sys.argv)
