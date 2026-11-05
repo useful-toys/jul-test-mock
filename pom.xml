@@ -75,6 +75,8 @@
         <maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
         <checkstyle.version>10.26.1</checkstyle.version>
         <maven-pmd-plugin.version>3.28.0</maven-pmd-plugin.version>
+        <spotbugs-maven-plugin.version>4.9.3.0</spotbugs-maven-plugin.version>
+        <findsecbugs-plugin.version>1.14.0</findsecbugs-plugin.version>
     </properties>
 
 
@@ -227,6 +229,34 @@
                                 <phase>verify</phase>
                                 <goals>
                                     <goal>pmd</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>com.github.spotbugs</groupId>
+                        <artifactId>spotbugs-maven-plugin</artifactId>
+                        <version>${spotbugs-maven-plugin.version}</version>
+                        <configuration>
+                            <effort>Max</effort>
+                            <threshold>Medium</threshold>
+                            <includeTests>true</includeTests>
+                            <failOnError>false</failOnError>
+                            <sarifOutput>true</sarifOutput>
+                            <plugins>
+                                <plugin>
+                                    <groupId>com.h3xstream.findsecbugs</groupId>
+                                    <artifactId>findsecbugs-plugin</artifactId>
+                                    <version>${findsecbugs-plugin.version}</version>
+                                </plugin>
+                            </plugins>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>spotbugs-sarif</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>spotbugs</goal>
                                 </goals>
                             </execution>
                         </executions>
