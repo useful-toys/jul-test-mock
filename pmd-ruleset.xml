@@ -15,6 +15,8 @@
     <rule ref="category/java/bestpractices.xml">
         <exclude name="GuardLogStatement"/>
         <exclude name="SystemPrintln"/>
+        <!-- Tests often check several facets of one log record or response, so a single assert per test only duplicates setup. -->
+        <exclude name="UnitTestContainsTooManyAsserts"/>
     </rule>
     <!-- Tests log on purpose to exercise the framework, so a log level guard would only hide what is under test. -->
     <rule ref="category/java/bestpractices.xml/GuardLogStatement">
