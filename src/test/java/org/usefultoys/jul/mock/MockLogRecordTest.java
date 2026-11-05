@@ -224,7 +224,7 @@ class MockLogRecordTest {
 
         // After MessageFormat processing (even when it fails), quotes are stripped
         assertEquals("Invalid format {", mockRecord.getFormattedMessage(),
-            "should return original message on format exception");
+                "should return original message on format exception");
     }
 
     @Test
