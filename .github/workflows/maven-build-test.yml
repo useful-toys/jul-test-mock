@@ -122,6 +122,57 @@ jobs:
       - name: Run tests with JDK ${{ matrix.java-version }}
         run: sh mvnw surefire:test --batch-mode -Denforcer.skip=true
 
+  # Job: Static analysis (informative, does not gate the pipeline)
+  # Runs the 'static-analysis' Maven profile and publishes the SARIF reports as
+  # Code Scanning alerts, job summary, PR comment and artifact.
+  static-analysis:
+    name: Static Analysis (SARIF)
+    needs: changes
+    if: needs.changes.outputs.code == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v5
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Run static analyzers
+        run: sh mvnw clean verify -P static-analysis --batch-mode
+
+      - name: Make SARIF paths repository-relative
+        run: python3 .github/scripts/sarif_report.py normalize target/checkstyle-result.sarif
+
+      - name: Publish summary
+        run: python3 .github/scripts/sarif_report.py markdown target/checkstyle-result.sarif | tee -a "$GITHUB_STEP_SUMMARY" > target/sarif-summary.md
+
+      - name: Upload SARIF to Code Scanning (Checkstyle)
+        # Fork PRs get a read-only token, so skip the steps that need write access.
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: target/checkstyle-result.sarif
+          category: checkstyle
+
+      - name: Comment summary on pull request
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: static-analysis
+          path: target/sarif-summary.md
+
+      - name: Upload SARIF reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: sarif-reports
+          path: target/*.sarif
+          retention-days: 7
+
   # Job 3: Final status check to simplify branch protection rules
   status-gateway:
     name: Status Gateway
