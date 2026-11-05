@@ -22,6 +22,7 @@ import java.text.MessageFormat;
 import java.util.ResourceBundle;
 import java.util.logging.Level;
 import java.util.logging.LogRecord;
+import java.util.*;   
 
 /**
  * Represents a single log event captured by {@link MockHandler}.
