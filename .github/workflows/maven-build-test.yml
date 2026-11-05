@@ -6,6 +6,8 @@
 # Strategy:
 # 1. Build once with JDK 21 (generates JAR and runs the full test suite)
 # 2. Run tests on the other LTS JDK versions (8, 11, 17) using the compiled artifact
+# 3. Run Checkstyle, PMD and SpotBugs in parallel on the compiled artifact, then
+#    aggregate their SARIF reports and the build's coverage into one summary
 
 name: Maven Build, Test and Analyze
 
@@ -63,8 +65,9 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      # Cache warm-up: setup-java saves ~/.m2/repository once per pom.xml hash, from the first
-      # job that misses. Resolving everything here keeps the saved cache complete.
+      # Cache warm-up: setup-java saves ~/.m2/repository once per pom.xml hash, at the end of
+      # this job. Resolving the static-analysis plugins here lets the analysis jobs, which
+      # start after this one, restore a complete cache.
       - name: Populate Maven cache
         run: sh mvnw dependency:resolve-plugins dependency:go-offline -P static-analysis,javadoc-validation --batch-mode -ntp
 
@@ -94,6 +97,13 @@ jobs:
           path: |
             target/classes/
             target/test-classes/
+          retention-days: 1
+
+      - name: Upload coverage report for the static analysis summary
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: coverage
+          path: target/site/jacoco/jacoco.csv
           retention-days: 1
 
   # Job 2: Run tests on the other LTS JDK versions
@@ -129,13 +139,30 @@ jobs:
         run: sh mvnw surefire:test --batch-mode -Denforcer.skip=true
 
   # Job: Static analysis (informative, does not gate the pipeline)
-  # Runs the 'static-analysis' Maven profile and publishes the SARIF reports as
-  # Code Scanning alerts, job summary, PR comment and artifact.
+  # One job per analyzer, in parallel with the compatibility tests. Each runs its Maven goal
+  # directly on the classes compiled by the build job (no recompilation, no tests) and
+  # publishes its SARIF report to Code Scanning and as an artifact for the report job.
   static-analysis:
-    name: Static Analysis (SARIF)
-    needs: changes
+    name: Static Analysis (${{ matrix.tool }})
+    needs: [build, changes]
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-26.04
+    strategy:
+      matrix:
+        include:
+          - tool: Checkstyle
+            goal: checkstyle:checkstyle
+            category: checkstyle
+            sarif: target/checkstyle-result.sarif
+          - tool: PMD
+            goal: pmd:pmd
+            category: pmd
+            sarif: target/pmd.sarif.json
+          - tool: SpotBugs
+            goal: spotbugs:spotbugs
+            category: spotbugs
+            sarif: target/spotbugsSarif.json
+      fail-fast: false
 
     steps:
       - name: Checkout code
@@ -148,44 +175,77 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      # Same warm-up as the build job: whichever job finishes first saves a complete cache.
-      - name: Populate Maven cache
-        run: sh mvnw dependency:resolve-plugins dependency:go-offline -P static-analysis,javadoc-validation --batch-mode -ntp
+      # PMD uses the classes for type resolution and SpotBugs analyzes them; Checkstyle reads
+      # only sources but gets them too to keep the three jobs alike.
+      - name: Download compiled artifacts
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: compiled-artifacts
+          path: target/
 
-      - name: Run static analyzers
-        run: sh mvnw clean verify -P static-analysis --batch-mode
+      - name: Run ${{ matrix.tool }}
+        run: sh mvnw ${{ matrix.goal }} -P static-analysis --batch-mode -ntp
 
       - name: Make SARIF paths repository-relative
-        run: python3 .github/scripts/sarif_report.py normalize target/checkstyle-result.sarif target/pmd.sarif.json target/spotbugsSarif.json
+        run: python3 .github/scripts/sarif_report.py normalize ${{ matrix.sarif }}
 
-      - name: Publish summary
-        run: |
-          {
-            python3 .github/scripts/sarif_report.py markdown target/checkstyle-result.sarif target/pmd.sarif.json target/spotbugsSarif.json
-            python3 .github/scripts/sarif_report.py coverage target/site/jacoco/jacoco.csv
-          } | tee -a "$GITHUB_STEP_SUMMARY" > target/sarif-summary.md
-
-      - name: Upload SARIF to Code Scanning (Checkstyle)
+      - name: Upload SARIF to Code Scanning
         # Fork PRs get a read-only token, so skip the steps that need write access.
         if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
         uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4
         with:
-          sarif_file: target/checkstyle-result.sarif
-          category: checkstyle
+          sarif_file: ${{ matrix.sarif }}
+          category: ${{ matrix.category }}
 
-      - name: Upload SARIF to Code Scanning (PMD)
-        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4
+      - name: Upload SARIF for the report job
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
-          sarif_file: target/pmd.sarif.json
-          category: pmd
+          name: sarif-${{ matrix.category }}
+          path: ${{ matrix.sarif }}
+          retention-days: 1
 
-      - name: Upload SARIF to Code Scanning (SpotBugs)
-        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4
+  # Job: Aggregates the analyzers' SARIF reports and the build's coverage into the job
+  # summary, a sticky PR comment and one artifact. Runs even if an analyzer failed, with
+  # whatever reports arrived.
+  static-analysis-report:
+    name: Static Analysis Report
+    needs: [changes, build, static-analysis]
+    if: ${{ !cancelled() && needs.changes.outputs.code == 'true' }}
+    runs-on: ubuntu-26.04
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Download SARIF reports
+        continue-on-error: true
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          sarif_file: target/spotbugsSarif.json
-          category: spotbugs
+          pattern: sarif-*
+          merge-multiple: true
+          path: target/
+
+      - name: Download coverage report
+        continue-on-error: true
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: coverage
+          path: target/
+
+      - name: Publish summary
+        run: |
+          reports=()
+          for f in target/checkstyle-result.sarif target/pmd.sarif.json target/spotbugsSarif.json; do
+            if [ -f "$f" ]; then reports+=("$f"); fi
+          done
+          {
+            if [ ${#reports[@]} -gt 0 ]; then
+              python3 .github/scripts/sarif_report.py markdown "${reports[@]}"
+            fi
+            if [ -f target/jacoco.csv ]; then
+              python3 .github/scripts/sarif_report.py coverage target/jacoco.csv
+            fi
+          } | tee -a "$GITHUB_STEP_SUMMARY" > target/sarif-summary.md
 
       - name: Comment summary on pull request
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
