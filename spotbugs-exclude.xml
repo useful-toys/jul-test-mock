@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  SpotBugs exclusions for the 'static-analysis' Maven profile.
+-->
+<FindBugsFilter>
+    <!--
+      Tests acquire loggers locally on purpose: acquiring the logger is exactly what is under test, and the
+      logger stays strongly referenced for the duration of each test.
+    -->
+    <Match>
+        <Class name="~.*Test(\$.*)?"/>
+        <Bug pattern="LG_LOST_LOGGER_DUE_TO_WEAK_REFERENCE"/>
+    </Match>
+</FindBugsFilter>
