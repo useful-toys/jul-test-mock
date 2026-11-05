@@ -26,7 +26,7 @@ jobs:
   # Job 0: Check if code changes occurred to avoid unnecessary builds
   changes:
     name: Check for Code Changes
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     outputs:
       code: ${{ steps.filter.outputs.code }}
     steps:
@@ -48,7 +48,7 @@ jobs:
     name: Build (JDK 21)
     needs: changes
     if: needs.changes.outputs.code == 'true'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
 
     steps:
       - name: Checkout code
@@ -93,7 +93,7 @@ jobs:
 
   # Job 2: Run tests on all LTS JDK versions
   test-compatibility:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: [build, changes]
     if: needs.changes.outputs.code == 'true'
     strategy:
@@ -127,7 +127,7 @@ jobs:
     name: Status Gateway
     needs: [changes, build, test-compatibility]
     if: always()
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - name: Check results
         run: |
