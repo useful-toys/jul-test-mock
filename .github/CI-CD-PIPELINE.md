@@ -58,6 +58,42 @@ jobs:
 - Prevents broken releases
 - Fast failure on compatibility issues
 
+## Static Analysis (SARIF)
+
+**Purpose**: Show code quality findings and test coverage in the pull request without gating the build.
+
+The `static-analysis` job in `maven-build-test.yml` runs `mvn clean verify -P static-analysis`. The profile runs
+Checkstyle (`checkstyle.xml`), PMD (`pmd-ruleset.xml`) and SpotBugs with Find Security Bugs. Each tool writes a SARIF
+report to `target/`, and no tool fails the build. The job is not part of `Status Gateway`.
+
+| Tool | Report | Code Scanning category |
+|---|---|---|
+| Checkstyle | `target/checkstyle-result.sarif` | `checkstyle` |
+| PMD | `target/pmd.sarif.json` | `pmd` |
+| SpotBugs + Find Security Bugs | `target/spotbugsSarif.json` | `spotbugs` |
+
+`.github/scripts/sarif_report.py` prepares and summarizes the reports:
+- `normalize` rewrites file URIs to repository-relative paths, which Code Scanning needs to place alerts.
+- `markdown` prints finding counts per tool and level, plus the top rules.
+- `coverage` prints JaCoCo coverage (total and per package) from `target/site/jacoco/jacoco.csv`.
+
+**Where the results appear**:
+- **Job summary**: findings and coverage tables on the workflow run page.
+- **Pull request comment**: the same tables in a single comment, updated on each run (skipped for forks).
+- **Code Scanning**: alerts in the Security tab and inline annotations on changed lines of the pull request.
+- **Artifact** `sarif-reports`: the SARIF files, kept for 7 days.
+
+Pull requests from forks have a read-only token, so the comment and the Code Scanning upload are skipped for them.
+
+**Run locally**: `mvn clean verify -P static-analysis`. Suggestions for next steps are in
+[STATIC-ANALYSIS-IMPROVEMENTS.md](../STATIC-ANALYSIS-IMPROVEMENTS.md).
+
+### CodeQL
+
+CodeQL runs through GitHub's default setup (Settings → Code security), not through a workflow file. The `Main Protection`
+ruleset requires results from the tool named `CodeQL`, so a pull request waits for them. If a pull request shows
+"Waiting for Code Scanning results", check that the default setup is still enabled.
+
 ## Pipeline Flow
 
 ### Standard Build (PR/Push)
