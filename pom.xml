@@ -188,7 +188,7 @@
                             </dependency>
                         </dependencies>
                         <configuration>
-                            <configLocation>sun_checks.xml</configLocation>
+                            <configLocation>${project.basedir}/checkstyle.xml</configLocation>
                             <outputFileFormat>sarif</outputFileFormat>
                             <outputFile>${project.build.directory}/checkstyle-result.sarif</outputFile>
                             <includeTestSourceDirectory>true</includeTestSourceDirectory>
