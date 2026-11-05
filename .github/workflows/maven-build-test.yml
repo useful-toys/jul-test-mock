@@ -4,8 +4,8 @@
 # Tests are executed against LTS JDK versions: 8, 11, 17, 21.
 #
 # Strategy:
-# 1. Build once with JDK 21 (generates JAR)
-# 2. Run tests on all LTS JDK versions using the compiled artifact
+# 1. Build once with JDK 21 (generates JAR and runs the full test suite)
+# 2. Run tests on the other LTS JDK versions (8, 11, 17) using the compiled artifact
 
 name: Maven Build, Test and Analyze
 
@@ -96,14 +96,15 @@ jobs:
             target/test-classes/
           retention-days: 1
 
-  # Job 2: Run tests on all LTS JDK versions
+  # Job 2: Run tests on the other LTS JDK versions
   test-compatibility:
     runs-on: ubuntu-26.04
     needs: [build, changes]
     if: needs.changes.outputs.code == 'true'
     strategy:
       matrix:
-        java-version: [8, 11, 17, 21]
+        # JDK 21 is omitted: the build job already ran the full test suite on it.
+        java-version: [8, 11, 17]
       fail-fast: false
     name: Test (JDK ${{ matrix.java-version }})
 
