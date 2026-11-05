@@ -72,6 +72,8 @@
         <maven-source-plugin.version>3.4.0</maven-source-plugin.version>
         <maven-javadoc-plugin.version>3.12.0</maven-javadoc-plugin.version>
         <maven-gpg-plugin.version>3.2.8</maven-gpg-plugin.version>
+        <maven-checkstyle-plugin.version>3.6.0</maven-checkstyle-plugin.version>
+        <checkstyle.version>10.26.1</checkstyle.version>
     </properties>
 
 
@@ -167,6 +169,46 @@
     </build>
 
     <profiles>
+
+        <!-- Static Analysis Profile - runs static analyzers and writes SARIF reports to target/ (informative, never fails the build).
+             Activate with: mvn clean verify -P static-analysis -->
+        <profile>
+            <id>static-analysis</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-checkstyle-plugin</artifactId>
+                        <version>${maven-checkstyle-plugin.version}</version>
+                        <dependencies>
+                            <dependency>
+                                <groupId>com.puppycrawl.tools</groupId>
+                                <artifactId>checkstyle</artifactId>
+                                <version>${checkstyle.version}</version>
+                            </dependency>
+                        </dependencies>
+                        <configuration>
+                            <configLocation>sun_checks.xml</configLocation>
+                            <outputFileFormat>sarif</outputFileFormat>
+                            <outputFile>${project.build.directory}/checkstyle-result.sarif</outputFile>
+                            <includeTestSourceDirectory>true</includeTestSourceDirectory>
+                            <failOnViolation>false</failOnViolation>
+                            <failsOnError>false</failsOnError>
+                            <consoleOutput>false</consoleOutput>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <id>checkstyle-sarif</id>
+                                <phase>verify</phase>
+                                <goals>
+                                    <goal>checkstyle</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
 
         <!-- Javadoc Validation Profile - validates Javadoc syntax when explicitly requested.
              Activate with: mvn clean verify -P javadoc-validation -->
