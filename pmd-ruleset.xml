@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  PMD rules for the 'static-analysis' Maven profile.
+
+  Proof-of-concept set: best practices, error-prone constructs and security only.
+  Style and design categories are left out to keep noise low; revisit them when the
+  rule set is discussed.
+-->
+<ruleset name="jul-test-mock"
+         xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 https://pmd.sourceforge.io/ruleset_2_0_0.xsd">
+    <description>Rules for jul-test-mock</description>
+
+    <rule ref="category/java/bestpractices.xml"/>
+    <rule ref="category/java/errorprone.xml"/>
+    <rule ref="category/java/security.xml"/>
+</ruleset>

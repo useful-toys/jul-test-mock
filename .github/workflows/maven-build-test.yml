@@ -146,10 +146,10 @@ jobs:
         run: sh mvnw clean verify -P static-analysis --batch-mode
 
       - name: Make SARIF paths repository-relative
-        run: python3 .github/scripts/sarif_report.py normalize target/checkstyle-result.sarif
+        run: python3 .github/scripts/sarif_report.py normalize target/checkstyle-result.sarif target/pmd.sarif.json
 
       - name: Publish summary
-        run: python3 .github/scripts/sarif_report.py markdown target/checkstyle-result.sarif | tee -a "$GITHUB_STEP_SUMMARY" > target/sarif-summary.md
+        run: python3 .github/scripts/sarif_report.py markdown target/checkstyle-result.sarif target/pmd.sarif.json | tee -a "$GITHUB_STEP_SUMMARY" > target/sarif-summary.md
 
       - name: Upload SARIF to Code Scanning (Checkstyle)
         # Fork PRs get a read-only token, so skip the steps that need write access.
@@ -158,6 +158,13 @@ jobs:
         with:
           sarif_file: target/checkstyle-result.sarif
           category: checkstyle
+
+      - name: Upload SARIF to Code Scanning (PMD)
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        uses: github/codeql-action/upload-sarif@v4
+        with:
+          sarif_file: target/pmd.sarif.json
+          category: pmd
 
       - name: Comment summary on pull request
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
@@ -170,7 +177,9 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: sarif-reports
-          path: target/*.sarif
+          path: |
+            target/*.sarif
+            target/pmd.sarif.json
           retention-days: 7
 
   # Job 3: Final status check to simplify branch protection rules
