@@ -23,7 +23,13 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import static org.usefultoys.jul.mock.AssertLogger.*;
+import static org.usefultoys.jul.mock.AssertLogger.assertHasRecord;
+import static org.usefultoys.jul.mock.AssertLogger.assertHasRecordWithThrowable;
+import static org.usefultoys.jul.mock.AssertLogger.assertRecord;
+import static org.usefultoys.jul.mock.AssertLogger.assertRecordCount;
+import static org.usefultoys.jul.mock.AssertLogger.assertRecordCountByLevel;
+import static org.usefultoys.jul.mock.AssertLogger.assertRecordCountByMessage;
+import static org.usefultoys.jul.mock.AssertLogger.assertRecordSequence;
 
 /**
  * Integration tests demonstrating real-world usage scenarios of the jul-test-mock library.

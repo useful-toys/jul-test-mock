@@ -26,7 +26,20 @@ import java.util.logging.Logger;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.usefultoys.jul.mock.AssertLogger.*;
+import static org.usefultoys.jul.mock.AssertLogger.assertHasRecord;
+import static org.usefultoys.jul.mock.AssertLogger.assertHasRecordWithThrowable;
+import static org.usefultoys.jul.mock.AssertLogger.assertNoRecord;
+import static org.usefultoys.jul.mock.AssertLogger.assertNoRecords;
+import static org.usefultoys.jul.mock.AssertLogger.assertNoRecordWithThrowable;
+import static org.usefultoys.jul.mock.AssertLogger.assertRecord;
+import static org.usefultoys.jul.mock.AssertLogger.assertRecordCount;
+import static org.usefultoys.jul.mock.AssertLogger.assertRecordCountByLevel;
+import static org.usefultoys.jul.mock.AssertLogger.assertRecordCountByMessage;
+import static org.usefultoys.jul.mock.AssertLogger.assertRecordHasThrowable;
+import static org.usefultoys.jul.mock.AssertLogger.assertRecordNot;
+import static org.usefultoys.jul.mock.AssertLogger.assertRecordNotWithThrowable;
+import static org.usefultoys.jul.mock.AssertLogger.assertRecordSequence;
+import static org.usefultoys.jul.mock.AssertLogger.assertRecordWithThrowable;
 
 /**
  * Unit tests for {@link AssertLogger}.
