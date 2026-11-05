@@ -46,7 +46,7 @@ import java.util.logging.LogRecord;
  * @author Daniel Felix Ferber
  */
 @Getter
-@ToString(includeFieldNames = true)
+@ToString
 public class MockLogRecord {
 
     private final int recordIndex;
