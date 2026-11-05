@@ -14,12 +14,20 @@
 
     <rule ref="category/java/bestpractices.xml">
         <exclude name="GuardLogStatement"/>
+        <exclude name="SystemPrintln"/>
     </rule>
     <!-- Tests log on purpose to exercise the framework, so a log level guard would only hide what is under test. -->
     <rule ref="category/java/bestpractices.xml/GuardLogStatement">
         <properties>
             <property name="violationSuppressXPath"
                       value="ancestor::ClassDeclaration[last()][ends-with(@SimpleName, 'Test')]"/>
+        </properties>
+    </rule>
+    <!-- JUnit extensions report failures straight to the test console; routing that through a logger would be circular for a logging mock. -->
+    <rule ref="category/java/bestpractices.xml/SystemPrintln">
+        <properties>
+            <property name="violationSuppressXPath"
+                      value="ancestor::ClassDeclaration[last()][ends-with(@SimpleName, 'Extension')]"/>
         </properties>
     </rule>
     <rule ref="category/java/errorprone.xml"/>
