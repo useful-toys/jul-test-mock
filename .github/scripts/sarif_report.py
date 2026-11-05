@@ -4,15 +4,15 @@
 normalize SARIF...   Rewrites absolute file URIs to repository-relative paths, in place.
                      GitHub Code Scanning only maps alerts to files when the paths are relative.
 markdown SARIF...    Prints a markdown summary (counts per tool/level and top rules) to stdout.
-coverage JACOCO_XML  Prints a markdown coverage summary (total and per package) to stdout.
+coverage JACOCO_CSV  Prints a markdown coverage summary (total and per package) to stdout.
 """
+import csv
 import json
 import os
 import sys
 from collections import Counter
 from pathlib import Path
 from urllib.parse import unquote, urlparse
-from xml.etree import ElementTree
 
 TOP_RULES = 10
 
@@ -76,32 +76,27 @@ def markdown(paths):
         print(block + "\n")
 
 
-def percent(counter):
-    covered, missed = int(counter.get("covered")), int(counter.get("missed"))
-    total = covered + missed
+def percent(rows, kind):
+    """Coverage of one counter (INSTRUCTION, BRANCH, LINE, METHOD) summed over the given CSV rows."""
+    covered = sum(int(row[f"{kind}_COVERED"]) for row in rows)
+    total = covered + sum(int(row[f"{kind}_MISSED"]) for row in rows)
     return "n/a" if total == 0 else f"{100 * covered / total:.1f}% ({covered}/{total})"
 
 
 def coverage(paths):
-    """Prints a markdown coverage summary from a JaCoCo XML report."""
-    report = ElementTree.parse(paths[0]).getroot()
-    totals = {c.get("type"): c for c in report.findall("counter")}
+    """Prints a markdown coverage summary from the JaCoCo CSV report."""
+    with open(paths[0], newline="", encoding="utf-8") as f:
+        rows = list(csv.DictReader(f))
     print("## Test coverage (JaCoCo)\n")
     print("| Instructions | Branches | Lines | Methods |")
     print("|---:|---:|---:|---:|")
-    print("| " + " | ".join(percent(totals[t]) if t in totals else "n/a"
-                            for t in ("INSTRUCTION", "BRANCH", "LINE", "METHOD")) + " |\n")
-    packages = report.findall("package")
-    if packages:
-        rows = []
-        for package in packages:
-            counters = {c.get("type"): c for c in package.findall("counter")}
-            name = package.get("name", "").replace("/", ".")
-            rows.append(f"| `{name}` | " + " | ".join(percent(counters[t]) if t in counters else "n/a"
-                                                     for t in ("LINE", "BRANCH")) + " |")
-        print("<details><summary>Coverage per package</summary>\n")
-        print("| Package | Lines | Branches |\n|---|---:|---:|")
-        print("\n".join(rows) + "\n\n</details>\n")
+    print("| " + " | ".join(percent(rows, kind) for kind in ("INSTRUCTION", "BRANCH", "LINE", "METHOD")) + " |\n")
+    print("<details><summary>Coverage per package</summary>\n")
+    print("| Package | Lines | Branches |\n|---|---:|---:|")
+    for package in sorted({row["PACKAGE"] for row in rows}):
+        selected = [row for row in rows if row["PACKAGE"] == package]
+        print(f"| `{package}` | {percent(selected, 'LINE')} | {percent(selected, 'BRANCH')} |")
+    print("\n</details>\n")
 
 
 def main(argv):
