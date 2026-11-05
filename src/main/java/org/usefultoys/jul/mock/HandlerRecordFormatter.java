@@ -61,8 +61,8 @@ public final class HandlerRecordFormatter {
 
             if (record.getThrown() != null) {
                 sb.append(String.format("        └─ throwable: %s: %s%n",
-                    record.getThrown().getClass().getSimpleName(),
-                    record.getThrown().getMessage()));
+                        record.getThrown().getClass().getSimpleName(),
+                        record.getThrown().getMessage()));
             }
         }
 

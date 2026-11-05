@@ -154,7 +154,7 @@ class IntegrationTest {
 
         // Verify transaction lifecycle
         assertRecordSequence(handler,
-            "started", "step 1", "step 2", "Constraint", "Rolling back", "failed");
+                "started", "step 1", "step 2", "Constraint", "Rolling back", "failed");
 
         // Verify transaction ID appears in key messages
         assertRecordCountByMessage(handler, "TX-12345", 3);
