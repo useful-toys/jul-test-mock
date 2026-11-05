@@ -81,6 +81,7 @@ public class MockHandler extends Handler {
      * <p>
      * By default, the handler captures all log levels (FINEST and above) but does not print to console.
      */
+    @SuppressWarnings("this-escape")
     public MockHandler() {
         setLevel(Level.ALL);
     }
