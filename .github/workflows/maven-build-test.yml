@@ -63,6 +63,11 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
+      # Cache warm-up: setup-java saves ~/.m2/repository once per pom.xml hash, from the first
+      # job that misses. Resolving everything here keeps the saved cache complete.
+      - name: Populate Maven cache
+        run: sh mvnw dependency:resolve-plugins dependency:go-offline -P static-analysis,javadoc-validation --batch-mode -ntp
+
       - name: Build and run full test suite with JDK 21
         run: sh mvnw clean verify --batch-mode
 
@@ -141,6 +146,10 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
           cache: 'maven'
+
+      # Same warm-up as the build job: whichever job finishes first saves a complete cache.
+      - name: Populate Maven cache
+        run: sh mvnw dependency:resolve-plugins dependency:go-offline -P static-analysis,javadoc-validation --batch-mode -ntp
 
       - name: Run static analyzers
         run: sh mvnw clean verify -P static-analysis --batch-mode
