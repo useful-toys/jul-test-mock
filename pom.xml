@@ -77,6 +77,7 @@
         <maven-pmd-plugin.version>3.28.0</maven-pmd-plugin.version>
         <spotbugs-maven-plugin.version>4.9.3.0</spotbugs-maven-plugin.version>
         <findsecbugs-plugin.version>1.14.0</findsecbugs-plugin.version>
+        <error-prone.version>2.52.0</error-prone.version>
     </properties>
 
 
@@ -107,17 +108,50 @@
         </pluginManagement>
         <plugins>
             <plugin>
-                <!-- Configures compiler to create Java 8 compatible classes. -->
+                <!-- Configures compiler to create Java 8 compatible classes, checked by Error Prone.
+                     Error Prone runs inside javac and needs JDK 21+ to build (enforced below).
+                     javac is forked so the JDK internals it needs are opened only for javac (-J flags):
+                     a .mvn/jvm.config would break Maven on the JDK 8 compatibility test jobs. -->
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>${maven-compiler-plugin.version}</version>
                 <configuration>
                     <release>8</release>
+                    <fork>true</fork>
                     <compilerArgs>
+                        <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED</arg>
+                        <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED</arg>
+                        <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED</arg>
+                        <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.model=ALL-UNNAMED</arg>
+                        <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED</arg>
+                        <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED</arg>
+                        <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED</arg>
+                        <arg>-J--add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED</arg>
+                        <arg>-J--add-opens=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED</arg>
+                        <arg>-J--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED</arg>
                         <!-- Enable all warnings except 'options' (which warns about obsolete source/target values) -->
                         <arg>-Xlint:all</arg>
                         <arg>-Xlint:-options</arg>
+                        <arg>-XDcompilePolicy=simple</arg>
+                        <arg>--should-stop=ifError=FLOW</arg>
+                        <arg>-Xplugin:ErrorProne -XepDisableWarningsInGeneratedCode</arg>
+                        <!-- Needed when building with JDK 21: https://github.com/google/error-prone/issues/5426 -->
+                        <arg>-XDaddTypeAnnotationsToSymbol=true</arg>
                     </compilerArgs>
+                    <!-- Setting these paths stops javac from discovering processors on the classpath,
+                         so Lombok must be listed here too. -->
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>com.google.errorprone</groupId>
+                            <artifactId>error_prone_core</artifactId>
+                            <version>${error-prone.version}</version>
+                        </path>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
                 </configuration>
             </plugin>
             <plugin>
