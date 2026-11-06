@@ -90,6 +90,8 @@
         <maven-install-plugin.version>3.1.4</maven-install-plugin.version>
         <maven-deploy-plugin.version>3.1.4</maven-deploy-plugin.version>
         <maven-site-plugin.version>3.22.0</maven-site-plugin.version>
+        <maven-help-plugin.version>3.5.2</maven-help-plugin.version>
+        <maven-wrapper-plugin.version>3.3.4</maven-wrapper-plugin.version>
     </properties>
 
 
@@ -141,6 +143,17 @@
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-site-plugin</artifactId>
                     <version>${maven-site-plugin.version}</version>
+                </plugin>
+                <!-- Utility plugins run from the command line or CI: help:evaluate, wrapper:wrapper -->
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-help-plugin</artifactId>
+                    <version>${maven-help-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-wrapper-plugin</artifactId>
+                    <version>${maven-wrapper-plugin.version}</version>
                 </plugin>
                 <plugin>
                     <groupId>org.codehaus.mojo</groupId>
