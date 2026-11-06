@@ -294,6 +294,22 @@
                                     </ignoreClasses>
                                     <message>A compile/runtime dependency contains bytecode newer than Java 8, but this library targets Java 8. Pick a version of that dependency that still supports Java 8 (test and provided scopes are not checked).</message>
                                 </enforceBytecodeVersion>
+                                <banDynamicVersions>
+                                    <allowRanges>false</allowRanges>
+                                    <allowLatest>false</allowLatest>
+                                    <allowRelease>false</allowRelease>
+                                    <allowSnapshots>true</allowSnapshots>
+                                    <message>Dynamic dependency versions (ranges, LATEST, RELEASE) make the build non-reproducible. Declare a fixed version, preferably in a property.</message>
+                                </banDynamicVersions>
+                                <requirePluginVersions>
+                                    <banLatest>true</banLatest>
+                                    <banRelease>true</banRelease>
+                                    <banSnapshots>true</banSnapshots>
+                                    <message>Every plugin must have an explicit, fixed release version (no LATEST, RELEASE or SNAPSHOT). Declare it in pom.xml, preferably through a property.</message>
+                                </requirePluginVersions>
+                                <dependencyConvergence>
+                                    <message>Transitive dependencies converge to different versions. Add an exclusion or pin the version in dependencyManagement; see 'sh mvnw dependency:tree'.</message>
+                                </dependencyConvergence>
                             </rules>
                         </configuration>
                     </execution>
