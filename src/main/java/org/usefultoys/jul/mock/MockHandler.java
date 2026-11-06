@@ -18,8 +18,9 @@ package org.usefultoys.jul.mock;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -218,8 +219,8 @@ public class MockHandler extends Handler {
         if (record.getThrown() == null) {
             return record.getLevel() + " " + record.getLoggerName() + ": " + record.getFormattedMessage();
         }
-        final ByteArrayOutputStream s = new ByteArrayOutputStream();
-        record.getThrown().printStackTrace(new PrintStream(s));
+        final StringWriter s = new StringWriter();
+        record.getThrown().printStackTrace(new PrintWriter(s));
         final String st = s.toString();
         return record.getLevel() + " " + record.getLoggerName() + ": " + record.getFormattedMessage() + "\n" + st;
     }
