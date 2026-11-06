@@ -27,9 +27,10 @@ on:
           - minor
           - major
 
+# The git push below authenticates with BOT_ACCESS_TOKEN (see the checkout step), which is also
+# what makes the tag push start the release workflow; GITHUB_TOKEN needs no actions scope.
 permissions:
   contents: write
-  actions: write
 
 jobs:
   create-new-version:
@@ -42,6 +43,7 @@ jobs:
         with:
           token: ${{ secrets.BOT_ACCESS_TOKEN }}
           fetch-depth: 0
+          persist-credentials: true # required: 'git fetch' and 'git push --follow-tags' reuse these credentials
 
       - name: Validate prerequisites
         run: |
