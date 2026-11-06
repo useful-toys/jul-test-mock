@@ -38,6 +38,7 @@ The project is built with Maven and uses the Maven wrapper for all builds.
 ### Language & Style
 - **English only**: All identifiers, strings, Javadocs, comments, documentation, and commit messages must be in English
 - **Java 8+**: Code must be compatible with Java 8 or higher
+  - Compile/runtime dependencies must also support Java 8 (the `enforceBytecodeVersion` rule enforces this). Stay on JUnit 5.x: JUnit 6 requires Java 17
 - **Follow conventions**: Maintain consistency with existing code style
 - **Immutability**: Declare variables, parameters, and attributes `final` whenever possible
 - **Lombok usage**: Use Lombok annotations to reduce boilerplate
