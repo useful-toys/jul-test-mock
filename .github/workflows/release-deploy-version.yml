@@ -135,7 +135,7 @@ jobs:
           echo "Tag ${GITHUB_REF_NAME} matches the pom.xml version ${POM_VERSION}"
 
       - name: Build and Deploy
-        run: sh mvnw -ntp clean deploy -P release --batch-mode -DskipTests
+        run: sh mvnw -ntp clean deploy -P release --batch-mode -DskipTests -Dmaven.build.cache.enabled=false
         env:
           MAVEN_GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
           MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
