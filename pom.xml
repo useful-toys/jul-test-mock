@@ -489,6 +489,28 @@
                         </executions>
                     </plugin>
                     <plugin>
+                        <!-- Publishing preconditions. Added to the enforcer plugin declared in the main build, so
+                             -Denforcer.skip=true disables these rules too. -->
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-enforcer-plugin</artifactId>
+                        <version>${maven-enforcer-plugin.version}</version>
+                        <executions>
+                            <execution>
+                                <id>enforce-release</id>
+                                <goals>
+                                    <goal>enforce</goal>
+                                </goals>
+                                <configuration>
+                                    <rules>
+                                        <requireReleaseVersion>
+                                            <message>The project version must be a release version, but it is a SNAPSHOT. Set the release version (e.g. 'sh mvnw versions:set -DnewVersion=X.Y.Z') or run the release from a release tag.</message>
+                                        </requireReleaseVersion>
+                                    </rules>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
                         <groupId>org.sonatype.central</groupId>
                         <artifactId>central-publishing-maven-plugin</artifactId>
                         <version>${central-publishing-maven-plugin.version}</version>
