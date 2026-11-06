@@ -139,30 +139,14 @@ jobs:
         run: sh mvnw surefire:test --batch-mode -Denforcer.skip=true
 
   # Job: Static analysis (informative, does not gate the pipeline)
-  # One job per analyzer, in parallel with the compatibility tests. Each runs its Maven goal
-  # directly on the classes compiled by the build job (no recompilation, no tests) and
-  # publishes its SARIF report to Code Scanning and as an artifact for the report job.
+  # Runs after the build, in parallel with the compatibility tests: the analyzers' Maven goals
+  # run directly on the classes compiled by the build job (no recompilation, no tests). The
+  # SARIF reports go to Code Scanning, the job summary, a PR comment and an artifact.
   static-analysis:
-    name: Static Analysis (${{ matrix.tool }})
+    name: Static Analysis (SARIF)
     needs: [build, changes]
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-26.04
-    strategy:
-      matrix:
-        include:
-          - tool: Checkstyle
-            goal: checkstyle:checkstyle
-            category: checkstyle
-            sarif: target/checkstyle-result.sarif
-          - tool: PMD
-            goal: pmd:pmd
-            category: pmd
-            sarif: target/pmd.sarif.json
-          - tool: SpotBugs
-            goal: spotbugs:spotbugs
-            category: spotbugs
-            sarif: target/spotbugsSarif.json
-      fail-fast: false
 
     steps:
       - name: Checkout code
@@ -175,77 +159,53 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      # PMD uses the classes for type resolution and SpotBugs analyzes them; Checkstyle reads
-      # only sources but gets them too to keep the three jobs alike.
+      # PMD uses the classes for type resolution and SpotBugs analyzes them.
       - name: Download compiled artifacts
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: compiled-artifacts
           path: target/
 
-      - name: Run ${{ matrix.tool }}
-        run: sh mvnw ${{ matrix.goal }} -P static-analysis --batch-mode -ntp
-
-      - name: Make SARIF paths repository-relative
-        run: python3 .github/scripts/sarif_report.py normalize ${{ matrix.sarif }}
-
-      - name: Upload SARIF to Code Scanning
-        # Fork PRs get a read-only token, so skip the steps that need write access.
-        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4
-        with:
-          sarif_file: ${{ matrix.sarif }}
-          category: ${{ matrix.category }}
-
-      - name: Upload SARIF for the report job
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: sarif-${{ matrix.category }}
-          path: ${{ matrix.sarif }}
-          retention-days: 1
-
-  # Job: Aggregates the analyzers' SARIF reports and the build's coverage into the job
-  # summary, a sticky PR comment and one artifact. Runs even if an analyzer failed, with
-  # whatever reports arrived.
-  static-analysis-report:
-    name: Static Analysis Report
-    needs: [changes, build, static-analysis]
-    if: ${{ !cancelled() && needs.changes.outputs.code == 'true' }}
-    runs-on: ubuntu-26.04
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Download SARIF reports
-        continue-on-error: true
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
-        with:
-          pattern: sarif-*
-          merge-multiple: true
-          path: target/
-
       - name: Download coverage report
-        continue-on-error: true
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
           name: coverage
           path: target/
 
+      - name: Run static analyzers
+        run: sh mvnw checkstyle:checkstyle pmd:pmd spotbugs:spotbugs -P static-analysis --batch-mode -ntp
+
+      - name: Make SARIF paths repository-relative
+        run: python3 .github/scripts/sarif_report.py normalize target/checkstyle-result.sarif target/pmd.sarif.json target/spotbugsSarif.json
+
       - name: Publish summary
         run: |
-          reports=()
-          for f in target/checkstyle-result.sarif target/pmd.sarif.json target/spotbugsSarif.json; do
-            if [ -f "$f" ]; then reports+=("$f"); fi
-          done
           {
-            if [ ${#reports[@]} -gt 0 ]; then
-              python3 .github/scripts/sarif_report.py markdown "${reports[@]}"
-            fi
-            if [ -f target/jacoco.csv ]; then
-              python3 .github/scripts/sarif_report.py coverage target/jacoco.csv
-            fi
+            python3 .github/scripts/sarif_report.py markdown target/checkstyle-result.sarif target/pmd.sarif.json target/spotbugsSarif.json
+            python3 .github/scripts/sarif_report.py coverage target/jacoco.csv
           } | tee -a "$GITHUB_STEP_SUMMARY" > target/sarif-summary.md
+
+      - name: Upload SARIF to Code Scanning (Checkstyle)
+        # Fork PRs get a read-only token, so skip the steps that need write access.
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4
+        with:
+          sarif_file: target/checkstyle-result.sarif
+          category: checkstyle
+
+      - name: Upload SARIF to Code Scanning (PMD)
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4
+        with:
+          sarif_file: target/pmd.sarif.json
+          category: pmd
+
+      - name: Upload SARIF to Code Scanning (SpotBugs)
+        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4
+        with:
+          sarif_file: target/spotbugsSarif.json
+          category: spotbugs
 
       - name: Comment summary on pull request
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
