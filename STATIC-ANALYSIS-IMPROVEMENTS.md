@@ -6,14 +6,16 @@ list, not a commitment: each item can be adopted, changed or dropped independent
 ## Current state
 
 - Profile: `static-analysis` in `pom.xml` (`mvn clean verify -P static-analysis`).
-- Analyzers: Checkstyle only (rules in `checkstyle.xml`, mirroring the IntelliJ code style:
-  120 columns, 4-space indent, 8-space continuation, no star imports).
-- Output: `target/checkstyle-result.sarif`.
-- CI: job `static-analysis` in `.github/workflows/maven-build-test.yml` normalizes the SARIF paths
-  (`.github/scripts/sarif_report.py`), writes a job summary, uploads to Code Scanning, comments
-  on the pull request and stores the SARIF as an artifact. It is informative and does not gate the
-  pipeline.
-- First run of the custom rules: 144 findings (111 `maxLineLen`, 23 trailing spaces,
+- Analyzers: Checkstyle (rules in `checkstyle.xml`, mirroring the IntelliJ code style:
+  120 columns, 4-space indent, 8-space continuation, no star imports), PMD (`pmd-ruleset.xml`) and
+  SpotBugs with Find Security Bugs, plus `dependency:analyze-only`. Error Prone runs in every build,
+  outside the profile.
+- Output: `target/checkstyle-result.sarif`, `target/pmd.sarif.json`, `target/spotbugsSarif.json`.
+- CI: job `static-analysis` in `.github/workflows/maven-build-test.yml` runs after the build job on
+  its compiled classes, normalizes the SARIF paths (`.github/scripts/sarif_report.py`), writes a job
+  summary, uploads to Code Scanning, comments on the pull request and stores the SARIF as an
+  artifact. It is informative and does not gate the pipeline. See `.github/CI-CD-PIPELINE.md`.
+- First run of the custom Checkstyle rules: 144 findings (111 `maxLineLen`, 23 trailing spaces,
   6 `import.avoidStar`, 4 `indentation.error`). The stock `sun_checks.xml` produced 700.
 
 ## Adoption order
@@ -84,11 +86,24 @@ decide whether any tool is redundant:
 - Codecov provides history and patch coverage that the in-job report does not.
 - CodeQL complements SpotBugs; keep unless proven redundant.
 
-## Other candidates (out of scope for now)
+## Other candidates
 
-- OWASP dependency-check (SARIF output) for CVEs in dependencies.
-- `maven-dependency-plugin:analyze` for unused and undeclared dependencies. The `pom.xml` declares
-  `junit-jupiter-api` with `compile` scope, which is worth reviewing.
-- Error Prone (and optionally NullAway) as a compiler plugin.
-- PIT mutation testing, to measure test quality beyond coverage.
+Adopted:
+
+- Error Prone as a compiler plugin: runs on every build and reports bug patterns as compiler warnings
+  (no SARIF; GitHub shows them as annotations). Its first run found a reference comparison of `Level`
+  in `AssertHelper.isLevel` and an implicit default charset in `MockHandler`, both fixed. NullAway
+  remains an option if nullness annotations are wanted.
+- `maven-dependency-plugin:analyze-only` in the static analysis job, reported in the job summary.
+  No problems found: `junit-jupiter-api` with `compile` scope is right, since the main code uses it.
+
+Dropped:
+
+- OWASP Dependency-Check: Dependabot alerts already cover dependency CVEs without build cost. With
+  rare builds, the NVD database cache expires between work periods and each period would start with
+  a full download (about 11 minutes, NVD API key required).
+
+Still open:
+
+- PIT mutation testing, to measure test quality beyond coverage (slow; on demand).
 - `sarif-multitool` to merge reports from several tools.
