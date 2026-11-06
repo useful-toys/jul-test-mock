@@ -136,7 +136,7 @@ jobs:
           path: target/
 
       - name: Run tests with JDK ${{ matrix.java-version }}
-        run: sh mvnw surefire:test --batch-mode -Denforcer.skip=true
+        run: sh mvnw surefire:test --batch-mode
 
   # Job: Static analysis (informative, does not gate the pipeline)
   # Runs after the build, in parallel with the compatibility tests: the analyzers' Maven goals
