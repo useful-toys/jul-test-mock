@@ -301,7 +301,7 @@
                                     <ignoreClasses>
                                         <ignoreClass>module-info</ignoreClass>
                                     </ignoreClasses>
-                                    <message>A compile/runtime dependency contains bytecode newer than Java 8, but this library targets Java 8. Pick a version of that dependency that still supports Java 8 (test and provided scopes are not checked).</message>
+                                    <message>A compile/runtime dependency contains bytecode newer than Java 8, but this library targets Java 8. Pick a version of that dependency that still supports Java 8, e.g. JUnit 5.x, since JUnit 6 requires Java 17 (test and provided scopes are not checked).</message>
                                 </enforceBytecodeVersion>
                                 <banDynamicVersions>
                                     <allowRanges>false</allowRanges>
