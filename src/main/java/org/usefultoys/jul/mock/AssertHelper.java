@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Assertions;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.logging.Level;
 
 /**
@@ -189,14 +190,16 @@ class AssertHelper {
     }
 
     /**
-     * Checks if a log record's level is the same as the expected level.
+     * Checks if a log record's level equals the expected level.
+     * Levels are compared by numeric value, as JUL does: {@link Level} is not an enum, so a custom
+     * level instance with the same value as a standard one counts as equal.
      *
      * @param record        the log record.
      * @param expectedLevel the expected level.
-     * @return {@code true} if the levels are the same, {@code false} otherwise.
+     * @return {@code true} if the levels are equal, {@code false} otherwise (including a {@code null} expected level).
      */
     boolean isLevel(final MockLogRecord record, final Level expectedLevel) {
-        return expectedLevel == record.getLevel();
+        return Objects.equals(expectedLevel, record.getLevel());
     }
 
     /**
