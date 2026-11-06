@@ -371,7 +371,7 @@
                         <version>${maven-pmd-plugin.version}</version>
                         <configuration>
                             <rulesets>
-                                <ruleset>${project.basedir}/pmd-ruleset.xml</ruleset>
+                                <ruleset>${project.basedir}/src/config/pmd/ruleset.xml</ruleset>
                             </rulesets>
                             <!-- maven-pmd-plugin has no built-in 'sarif' format; use PMD's renderer class. -->
                             <format>net.sourceforge.pmd.renderers.SarifRenderer</format>
