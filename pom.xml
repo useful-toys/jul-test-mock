@@ -23,7 +23,7 @@
      download apache-maven-X-bin.zip from Maven Central, check it against the
      official .sha512 and then compute its SHA-256 (Get-FileHash -Algorithm
      SHA256, or sha256sum). The wrapper scripts refuse a different hash.
-  3. If X leaves the range [3.9.8,3.10), adjust requireMavenVersion in the
+  3. If X leaves the range [3.10.0,3.11), adjust requireMavenVersion in the
      enforcer configuration below.
   -->
 <project xmlns="http://maven.apache.org/POM/4.0.0"

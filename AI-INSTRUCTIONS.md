@@ -16,7 +16,7 @@ The project is built with Maven and uses the Maven wrapper for all builds.
 
 ### Build Environment
 - **Java**: 21 for builds (code must maintain Java 8+ compatibility)
-- **Maven**: 3.9.8 (via Maven wrapper)
+- **Maven**: 3.10.0 (via Maven wrapper)
 - **Repository**: GitHub
 - **CI/CD**: GitHub Actions for validation, build, testing, and deployment to Maven Central and GitHub Releases
 
