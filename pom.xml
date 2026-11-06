@@ -505,6 +505,11 @@
                                         <requireReleaseVersion>
                                             <message>The project version must be a release version, but it is a SNAPSHOT. Set the release version (e.g. 'sh mvnw versions:set -DnewVersion=X.Y.Z') or run the release from a release tag.</message>
                                         </requireReleaseVersion>
+                                        <requireReleaseDeps>
+                                            <searchTransitive>true</searchTransitive>
+                                            <failWhenParentIsSnapshot>true</failWhenParentIsSnapshot>
+                                            <message>A SNAPSHOT dependency (direct or transitive) or SNAPSHOT parent was found, and releases must not depend on unreleased artifacts. Replace it with a released version; see 'sh mvnw dependency:tree'.</message>
+                                        </requireReleaseDeps>
                                     </rules>
                                 </configuration>
                             </execution>
