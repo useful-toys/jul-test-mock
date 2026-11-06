@@ -71,6 +71,8 @@
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
 
         <lombok.version>1.18.42</lombok.version>
+        <!-- Keep JUnit on 5.x: JUnit 6 requires Java 17, but this library generates Java 8 bytecode and junit-jupiter-api
+             is a compile dependency. The enforceBytecodeVersion rule rejects the upgrade. -->
         <junit5.version>5.14.1</junit5.version>
         <jacoco-maven-plugin.version>0.8.16</jacoco-maven-plugin.version>
         <versions-maven-plugin.version>2.23.0</versions-maven-plugin.version>
