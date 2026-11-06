@@ -91,9 +91,10 @@ Status Gateway (build + tests; static analysis is informative)
 The `static-analysis` job in `maven-build-test.yml` runs after the build job, in parallel with the compatibility
 tests. It downloads the compiled classes and the coverage report from the build job and runs the analyzers' Maven
 goals directly (`checkstyle:checkstyle pmd:pmd spotbugs:spotbugs dependency:analyze-only -P static-analysis`), with
-no recompilation and no tests. Checkstyle (`checkstyle.xml`), PMD (`pmd-ruleset.xml`) and SpotBugs with Find Security
-Bugs each write a SARIF report to `target/`; `dependency:analyze-only` reports unused declared and used undeclared
-dependencies in the log. No tool fails the build, and the job is not part of `Status Gateway`.
+no recompilation and no tests. Checkstyle (`src/config/checkstyle/checkstyle.xml`), PMD (`src/config/pmd/ruleset.xml`)
+and SpotBugs with Find Security Bugs (exclusions in `src/config/spotbugs/exclude.xml`) each write a SARIF report to
+`target/`; `dependency:analyze-only` reports unused declared and used undeclared dependencies in the log. No tool
+fails the build, and the job is not part of `Status Gateway`.
 
 | Tool | Report | Code Scanning category |
 |---|---|---|
