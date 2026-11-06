@@ -212,7 +212,7 @@ jobs:
     needs: [build, changes]
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-26.04
-    # Without an NVD API key and without cache, the first full download takes about 30 minutes.
+    # Safety limit: the first full NVD download (no cache yet) is the slow case.
     timeout-minutes: 60
 
     steps:
@@ -241,10 +241,11 @@ jobs:
         env:
           NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
         run: |
-          # Point the plugin to the key only when the secret exists: an empty key makes it fail.
-          key_arg=()
-          if [ -n "$NVD_API_KEY" ]; then key_arg=(-DnvdApiKeyEnvironmentVariable=NVD_API_KEY); fi
-          sh mvnw dependency-check:check -P dependency-check "${key_arg[@]}" --batch-mode -ntp
+          if [ -z "$NVD_API_KEY" ]; then
+            echo "::error::Secret NVD_API_KEY is not set. Request a key at https://nvd.nist.gov/developers/request-an-api-key"
+            exit 1
+          fi
+          sh mvnw dependency-check:check -P dependency-check --batch-mode -ntp
 
       - name: Make SARIF paths repository-relative
         run: python3 .github/scripts/sarif_report.py normalize target/dependency-check-report.sarif
