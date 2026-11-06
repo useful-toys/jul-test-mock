@@ -2,12 +2,15 @@
 # It is triggered on a push event for tags matching 'v*.*.*' (e.g., v1.2.3),
 # or can be triggered manually.
 #
-# Comprehensive validation strategy:
-# 1. Runs full test suite across all supported LTS JDK versions (8, 11, 17, 21)
-# 2. Only proceeds to deployment if all tests pass
-# 3. Builds, signs with GPG, and deploys to Maven Central
-# 4. Creates GitHub Release with auto-generated notes
-# 5. Uploads compiled JAR artifacts to release
+# Comprehensive validation strategy (same as the build/test workflow):
+# 1. Builds once with JDK 21 (the only JDK that runs Error Prone) and runs the full
+#    test suite, then shares the compiled classes as an artifact
+# 2. Runs the tests on the other LTS JDK versions (8, 11, 17) against those classes,
+#    without recompiling
+# 3. Only proceeds to deployment if the build and all tests pass
+# 4. Builds, signs with GPG, and deploys to Maven Central
+# 5. Creates GitHub Release with auto-generated notes
+# 6. Uploads compiled JAR artifacts to release
 
 name: Release and Deploy Version
 
