@@ -21,6 +21,34 @@ permissions:
   contents: write # to fetch code (actions/checkout) and push tags
 
 jobs:
+  # Build once with JDK 21 (the only JDK that runs Error Prone) and share the compiled classes
+  build:
+    name: Build (JDK 21)
+    runs-on: ubuntu-26.04
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Build and run full test suite with JDK 21
+        run: sh mvnw clean verify --batch-mode
+
+      - name: Upload compiled artifacts for reuse
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: compiled-artifacts
+          path: |
+            target/classes/
+            target/test-classes/
+          retention-days: 1
+
   # Comprehensive test validation across all supported LTS JDK versions
   test-compatibility:
     runs-on: ubuntu-26.04
