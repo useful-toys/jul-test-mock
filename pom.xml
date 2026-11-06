@@ -283,6 +283,17 @@
                                     </ignoreClasses>
                                     <message>Duplicate classes found on the classpath (same class in more than one dependency with different content). Run 'sh mvnw dependency:tree' to locate them and exclude or align the conflicting artifacts.</message>
                                 </banDuplicateClasses>
+                                <enforceBytecodeVersion>
+                                    <maxJdkVersion>1.8</maxJdkVersion>
+                                    <ignoredScopes>
+                                        <ignoredScope>test</ignoredScope>
+                                        <ignoredScope>provided</ignoredScope>
+                                    </ignoredScopes>
+                                    <ignoreClasses>
+                                        <ignoreClass>module-info</ignoreClass>
+                                    </ignoreClasses>
+                                    <message>A compile/runtime dependency contains bytecode newer than Java 8, but this library targets Java 8. Pick a version of that dependency that still supports Java 8 (test and provided scopes are not checked).</message>
+                                </enforceBytecodeVersion>
                             </rules>
                         </configuration>
                     </execution>
