@@ -172,8 +172,11 @@ jobs:
           name: coverage
           path: target/
 
+      # dependency:analyze-only has no report file; its log is kept for the summary.
       - name: Run static analyzers
-        run: sh mvnw checkstyle:checkstyle pmd:pmd spotbugs:spotbugs -P static-analysis --batch-mode -ntp
+        run: |
+          set -o pipefail
+          sh mvnw checkstyle:checkstyle pmd:pmd spotbugs:spotbugs dependency:analyze-only -P static-analysis --batch-mode -ntp | tee target/static-analysis.log
 
       - name: Make SARIF paths repository-relative
         run: python3 .github/scripts/sarif_report.py normalize target/checkstyle-result.sarif target/pmd.sarif.json target/spotbugsSarif.json
@@ -182,6 +185,15 @@ jobs:
         run: |
           {
             python3 .github/scripts/sarif_report.py markdown target/checkstyle-result.sarif target/pmd.sarif.json target/spotbugsSarif.json
+            echo "## Dependency analysis"
+            echo
+            issues=$(sed -n '/--- dependency:.*:analyze-only/,/--- \|BUILD/p' target/static-analysis.log | grep '^\[WARNING\]' | sed 's/^\[WARNING\] *//' || true)
+            if [ -z "$issues" ]; then
+              echo "No dependency problems found."
+            else
+              printf '```\n%s\n```\n' "$issues"
+            fi
+            echo
             python3 .github/scripts/sarif_report.py coverage target/jacoco.csv
           } | tee -a "$GITHUB_STEP_SUMMARY" > target/sarif-summary.md
 

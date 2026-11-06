@@ -78,6 +78,7 @@
         <spotbugs-maven-plugin.version>4.9.3.0</spotbugs-maven-plugin.version>
         <findsecbugs-plugin.version>1.14.0</findsecbugs-plugin.version>
         <error-prone.version>2.52.0</error-prone.version>
+        <maven-dependency-plugin.version>3.11.0</maven-dependency-plugin.version>
     </properties>
 
 
@@ -103,6 +104,16 @@
                     <groupId>org.codehaus.mojo</groupId>
                     <artifactId>versions-maven-plugin</artifactId>
                     <version>${versions-maven-plugin.version}</version>
+                </plugin>
+                <plugin>
+                    <!-- dependency:analyze-only (static analysis job) reports unused declared and
+                         used undeclared dependencies; informative, never fails the build. -->
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-dependency-plugin</artifactId>
+                    <version>${maven-dependency-plugin.version}</version>
+                    <configuration>
+                        <failOnWarning>false</failOnWarning>
+                    </configuration>
                 </plugin>
             </plugins>
         </pluginManagement>
