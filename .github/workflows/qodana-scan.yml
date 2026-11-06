@@ -14,10 +14,12 @@ on:
   pull_request:
   workflow_dispatch:
 
+# contents: write is only needed when qodana-action pushes quick-fixes (input push-fixes),
+# which is not enabled here (default: none).
 permissions:
-  contents: write
-  pull-requests: write
-  checks: write
+  contents: read
+  pull-requests: write # summary comment and reactions on the pull request
+  checks: write        # annotations published as a check run
 
 jobs:
   qodana-scan:
@@ -28,6 +30,9 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}  # to check out the actual pull request commit, not the merge commit
           fetch-depth: 0
+          # The action only runs 'git fetch' (anonymous works on a public repository; it falls back
+          # to the webhook SHAs otherwise) and never pushes while push-fixes is none.
+          persist-credentials: false
 
       - name: Qodana Scan
         uses: JetBrains/qodana-action@3e8d76ff0e0241618abd808682f426afe84bab3f # v2026.2.2
