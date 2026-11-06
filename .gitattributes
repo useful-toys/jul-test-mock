@@ -1,0 +1,4 @@
+# O mvnw e um script sh e precisa de LF; o mvnw.cmd e um script do Windows e precisa de CRLF.
+# Sem isso, o autocrlf do Windows grava o mvnw com CRLF no disco e o sh quebra.
+mvnw text eol=lf
+*.cmd text eol=crlf
