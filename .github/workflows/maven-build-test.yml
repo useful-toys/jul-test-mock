@@ -16,24 +16,26 @@ on:
   pull_request:
   workflow_dispatch:
 
+# Least privilege: jobs read the repository only; each job below declares anything extra.
+# A job-level permissions block replaces this one, so it must repeat contents: read.
 permissions:
   contents: read
-  pull-requests: write
-  statuses: write
-  security-events: write
-  actions: read
-  checks: write
 
 jobs:
   # Job 0: Check if code changes occurred to avoid unnecessary builds
   changes:
     name: Check for Code Changes
     runs-on: ubuntu-26.04
+    permissions:
+      contents: read       # actions/checkout and the git diff on push events
+      pull-requests: read  # dorny/paths-filter lists the PR files through the API
     outputs:
       code: ${{ steps.filter.outputs.code }}
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false # keeps the token out of .git
 
       - name: Check for code changes
         uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
@@ -51,12 +53,17 @@ jobs:
     needs: changes
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-26.04
+    # Codecov, Coveralls and Codacy authenticate with their own tokens (Coveralls also works
+    # on fork PRs, where GITHUB_TOKEN is read-only), so no extra GITHUB_TOKEN scope is needed.
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           fetch-depth: 0
+          persist-credentials: false # keeps the token out of .git, away from Maven plugins
 
       - name: Set up JDK 21
         uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
@@ -117,10 +124,14 @@ jobs:
         java-version: [8, 11, 17]
       fail-fast: false
     name: Test (JDK ${{ matrix.java-version }})
+    permissions:
+      contents: read
 
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false # keeps the token out of .git, away from Maven plugins
 
       - name: Set up JDK ${{ matrix.java-version }}
         uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
@@ -147,10 +158,17 @@ jobs:
     needs: [build, changes]
     if: needs.changes.outputs.code == 'true'
     runs-on: ubuntu-26.04
+    permissions:
+      contents: read         # actions/checkout
+      security-events: write # github/codeql-action/upload-sarif
+      pull-requests: write   # sticky pull request comment
+      actions: read          # upload-sarif reads the workflow run (required on private repositories)
 
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false # keeps the token out of .git, away from Maven plugins
 
       - name: Set up JDK 21
         uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
@@ -242,6 +260,7 @@ jobs:
     needs: [changes, build, test-compatibility]
     if: always()
     runs-on: ubuntu-26.04
+    permissions: {} # only inspects the results of the needed jobs; uses no token
     steps:
       - name: Check results
         run: |
