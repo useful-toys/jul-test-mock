@@ -245,7 +245,8 @@
                 </executions>
             </plugin>
             <plugin>
-                <!-- Enforces Maven and Java version requirements. -->
+                <!-- Build validations (Maven/JDK versions, dependency and plugin hygiene). Disabled as a whole
+                     by -Denforcer.skip=true, which the JDK compatibility jobs rely on. -->
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
                 <version>${maven-enforcer-plugin.version}</version>
@@ -259,7 +260,7 @@
                 </dependencies>
                 <executions>
                     <execution>
-                        <id>enforce-maven</id>
+                        <id>enforce-build</id>
                         <goals>
                             <goal>enforce</goal>
                         </goals>
