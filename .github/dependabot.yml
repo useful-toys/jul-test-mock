@@ -1,0 +1,35 @@
+# Docs: https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference
+# Os PRs do Dependabot passam pelo mesmo CI (enforcer e matriz JDK 8/11/17/21).
+# Nao cobertos: .mvn/wrapper (atualizacao manual com wrapper:wrapper) e, por nao ser
+# documentado, .mvn/extensions.xml.
+version: 2
+updates:
+  - package-ecosystem: maven
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: build
+    groups:
+      # Os nomes sao groupId:artifactId; o * casa qualquer trecho.
+      # Vale o primeiro grupo que casa: o que sobra cai em "dependencies".
+      maven-plugins:
+        patterns:
+          - "*-plugin"
+      dependencies:
+        patterns:
+          - "*"
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 3
+    commit-message:
+      prefix: ci
+    groups:
+      # Atualiza o SHA e o comentario "# vX.Y.Z" das actions fixadas por SHA.
+      github-actions:
+        patterns:
+          - "*"
