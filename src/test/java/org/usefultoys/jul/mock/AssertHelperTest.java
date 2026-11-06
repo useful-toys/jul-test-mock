@@ -192,6 +192,30 @@ class AssertHelperTest {
             assertTrue(AssertHelper.isLevel(record, Level.FINE), "should be true for same level");
             assertFalse(AssertHelper.isLevel(record, Level.INFO), "should be false for different level");
         }
+
+        @Test
+        @DisplayName("should compare levels by value, not by instance")
+        void shouldCompareByValue() {
+            final MockLogRecord record = createRecord(Level.INFO, "message", null);
+            final Level customInfo = new CustomLevel("CUSTOM_INFO", Level.INFO.intValue());
+            assertTrue(AssertHelper.isLevel(record, customInfo), "should be true for a distinct instance with the same value");
+        }
+
+        @Test
+        @DisplayName("should return false for null expected level")
+        void shouldReturnFalseForNull() {
+            final MockLogRecord record = createRecord(Level.INFO, "message", null);
+            assertFalse(AssertHelper.isLevel(record, null), "should be false for null expected level");
+        }
+    }
+
+    /** Custom level, as applications define them: Level's constructor is protected. */
+    private static final class CustomLevel extends Level {
+        private static final long serialVersionUID = 1L;
+
+        CustomLevel(final String name, final int value) {
+            super(name, value);
+        }
     }
 
     @Nested
