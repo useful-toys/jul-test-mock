@@ -16,8 +16,15 @@
   -->
 
 <!--
-  To update the Maven wrapper, run the following command in the terminal:
-  mvn org.apache.maven.plugins:maven-wrapper-plugin:3.2.0:wrapper -Dmaven=3.9.8
+  To update the Maven wrapper (script-only mode, without maven-wrapper.jar):
+  1. Run: sh mvnw wrapper:wrapper -Dtype=only-script -Dmaven=X
+     (the plugin version comes from maven-wrapper-plugin.version).
+  2. Recompute distributionSha256Sum in .mvn/wrapper/maven-wrapper.properties:
+     download apache-maven-X-bin.zip from Maven Central, check it against the
+     official .sha512 and then compute its SHA-256 (Get-FileHash -Algorithm
+     SHA256, or sha256sum). The wrapper scripts refuse a different hash.
+  3. If X leaves the range [3.9.8,3.10), adjust requireMavenVersion in the
+     enforcer configuration below.
   -->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
