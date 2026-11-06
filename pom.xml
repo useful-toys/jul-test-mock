@@ -510,6 +510,11 @@
                                             <failWhenParentIsSnapshot>true</failWhenParentIsSnapshot>
                                             <message>A SNAPSHOT dependency (direct or transitive) or SNAPSHOT parent was found, and releases must not depend on unreleased artifacts. Replace it with a released version; see 'sh mvnw dependency:tree'.</message>
                                         </requireReleaseDeps>
+                                        <requireNoRepositories>
+                                            <banRepositories>true</banRepositories>
+                                            <banPluginRepositories>true</banPluginRepositories>
+                                            <message>Maven Central rejects POMs that declare custom repositories or pluginRepositories (the project or its parents). Remove them: every dependency and plugin must be available from Maven Central.</message>
+                                        </requireNoRepositories>
                                     </rules>
                                 </configuration>
                             </execution>
