@@ -274,6 +274,15 @@
                                     <version>[21,22)</version>
                                     <message>Build requires JDK 21 (Error Prone needs it); the library still targets Java 8. Compatibility tests on other JDKs must pass -Denforcer.skip=true.</message>
                                 </requireJavaVersion>
+                                <banDuplicateClasses>
+                                    <findAllDuplicates>true</findAllDuplicates>
+                                    <ignoreWhenIdentical>true</ignoreWhenIdentical>
+                                    <ignoreClasses>
+                                        <ignoreClass>module-info</ignoreClass>
+                                        <ignoreClass>META-INF/versions/**</ignoreClass>
+                                    </ignoreClasses>
+                                    <message>Duplicate classes found on the classpath (same class in more than one dependency with different content). Run 'sh mvnw dependency:tree' to locate them and exclude or align the conflicting artifacts.</message>
+                                </banDuplicateClasses>
                             </rules>
                         </configuration>
                     </execution>
