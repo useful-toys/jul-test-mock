@@ -11,6 +11,12 @@ updates:
     open-pull-requests-limit: 5
     commit-message:
       prefix: build
+    ignore:
+      # O JUnit 6 exige Java 17, mas a biblioteca gera bytecode Java 8 e o junit-jupiter-api
+      # tem escopo compile (vai para o classpath de quem a usa). Fica na linha 5.x; o
+      # enforceBytecodeVersion do enforcer barra a troca de qualquer modo.
+      - dependency-name: "org.junit.jupiter:junit-jupiter-api"
+        update-types: ["version-update:semver-major"]
     groups:
       # Os nomes sao groupId:artifactId; o * casa qualquer trecho.
       # Vale o primeiro grupo que casa: o que sobra cai em "dependencies".
