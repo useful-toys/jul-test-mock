@@ -6,10 +6,10 @@ list, not a commitment: each item can be adopted, changed or dropped independent
 ## Current state
 
 - Profile: `static-analysis` in `pom.xml` (`mvn clean verify -P static-analysis`).
-- Analyzers: Checkstyle (rules in `checkstyle.xml`, mirroring the IntelliJ code style:
-  120 columns, 4-space indent, 8-space continuation, no star imports), PMD (`pmd-ruleset.xml`) and
-  SpotBugs with Find Security Bugs, plus `dependency:analyze-only`. Error Prone runs in every build,
-  outside the profile.
+- Analyzers: Checkstyle (rules in `src/config/checkstyle/checkstyle.xml`, mirroring the IntelliJ code style:
+  120 columns, 4-space indent, 8-space continuation, no star imports), PMD (`src/config/pmd/ruleset.xml`) and
+  SpotBugs with Find Security Bugs (exclusions in `src/config/spotbugs/exclude.xml`), plus
+  `dependency:analyze-only`. Error Prone runs in every build, outside the profile.
 - Output: `target/checkstyle-result.sarif`, `target/pmd.sarif.json`, `target/spotbugsSarif.json`.
 - CI: job `static-analysis` in `.github/workflows/maven-build-test.yml` runs after the build job on
   its compiled classes, normalizes the SARIF paths (`.github/scripts/sarif_report.py`), writes a job
@@ -60,7 +60,7 @@ list, not a commitment: each item can be adopted, changed or dropped independent
 - JaCoCo already produces `target/site/jacoco/jacoco.xml`; it does not write SARIF. Show line, branch
   and method coverage (total and per package) in the job summary and in the same PR comment.
 - Consider `jacoco:check` with a minimum threshold, so local builds also fail on a coverage drop.
-  Today the 90% target exists only in `codecov.yml`.
+  Today the 90% target exists only in `.github/codecov.yml`.
 - Surefire test results could also go in the job summary (counts, failures), which reduces the
   need to open external services.
 - Coverage is measured only on the JDK 21 build; the other JDK jobs only run tests.
