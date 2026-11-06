@@ -77,8 +77,6 @@
         <maven-pmd-plugin.version>3.28.0</maven-pmd-plugin.version>
         <spotbugs-maven-plugin.version>4.9.3.0</spotbugs-maven-plugin.version>
         <findsecbugs-plugin.version>1.14.0</findsecbugs-plugin.version>
-        <!-- Needs an NVD API key: 13.0.0 aborts without one, and keyless downloads hit HTTP 429. -->
-        <dependency-check-maven.version>13.0.0</dependency-check-maven.version>
     </properties>
 
 
@@ -263,41 +261,6 @@
                                 </goals>
                             </execution>
                         </executions>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-
-        <!-- Dependency Check Profile - scans dependencies for known vulnerabilities (CVEs) with
-             OWASP Dependency-Check and writes a SARIF report to target/ (informative, never fails the build).
-             Kept apart from 'static-analysis' because the first run downloads the whole NVD database.
-             Requires an NVD API key (https://nvd.nist.gov/developers/request-an-api-key)
-             in the NVD_API_KEY environment variable.
-             Run with: mvn -P dependency-check dependency-check:check -->
-        <profile>
-            <id>dependency-check</id>
-            <build>
-                <plugins>
-                    <plugin>
-                        <groupId>org.owasp</groupId>
-                        <artifactId>dependency-check-maven</artifactId>
-                        <version>${dependency-check-maven.version}</version>
-                        <configuration>
-                            <nvdApiKeyEnvironmentVariable>NVD_API_KEY</nvdApiKeyEnvironmentVariable>
-                            <!-- Outside ~/.m2/repository so CI can cache it apart from the Maven cache. -->
-                            <dataDirectory>${user.home}/.dependency-check-data</dataDirectory>
-                            <formats>
-                                <format>SARIF</format>
-                                <format>HTML</format>
-                            </formats>
-                            <failBuildOnCVSS>11</failBuildOnCVSS>
-                            <!-- Analyzers for ecosystems this project does not use, or that need credentials. -->
-                            <ossIndexAnalyzerEnabled>false</ossIndexAnalyzerEnabled>
-                            <retireJsAnalyzerEnabled>false</retireJsAnalyzerEnabled>
-                            <nodeAnalyzerEnabled>false</nodeAnalyzerEnabled>
-                            <nodeAuditAnalyzerEnabled>false</nodeAuditAnalyzerEnabled>
-                            <assemblyAnalyzerEnabled>false</assemblyAnalyzerEnabled>
-                        </configuration>
                     </plugin>
                 </plugins>
             </build>
