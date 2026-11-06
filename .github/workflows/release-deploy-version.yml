@@ -112,6 +112,28 @@ jobs:
           server-username: MAVEN_CENTRAL_USERNAME
           server-password: MAVEN_CENTRAL_PASSWORD
 
+      - name: Check that the tag matches the pom version
+        # Runs before anything is published. workflow_dispatch can start this workflow from a
+        # branch, which would publish whatever version the pom has; a tag that disagrees with the
+        # pom would publish an artifact under a version the release does not announce.
+        # The ref comes from the runner environment (GITHUB_REF_TYPE, GITHUB_REF_NAME), never
+        # interpolated into the script, so a crafted tag name cannot inject commands.
+        run: |
+          if [ "${GITHUB_REF_TYPE}" != "tag" ]; then
+            echo "::error::A release can only run from a tag, but the current ref is the ${GITHUB_REF_TYPE} '${GITHUB_REF_NAME}'. Start the workflow from a vX.Y.Z tag."
+            exit 1
+          fi
+          POM_VERSION=$(sh mvnw -q -DforceStdout help:evaluate -Dexpression=project.version --batch-mode) || {
+            echo "::error::Could not read the project version from pom.xml."
+            exit 1
+          }
+          TAG_VERSION="${GITHUB_REF_NAME#v}"
+          if [ "${TAG_VERSION}" != "${POM_VERSION}" ]; then
+            echo "::error::Tag '${GITHUB_REF_NAME}' (version ${TAG_VERSION}) does not match the pom.xml version '${POM_VERSION}'. Fix the pom version or tag the right commit."
+            exit 1
+          fi
+          echo "Tag ${GITHUB_REF_NAME} matches the pom.xml version ${POM_VERSION}"
+
       - name: Build and Deploy
         run: sh mvnw -ntp clean deploy -P release --batch-mode -DskipTests
         env:
