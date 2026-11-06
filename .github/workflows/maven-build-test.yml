@@ -81,7 +81,10 @@ jobs:
       - name: Build and run full test suite with JDK 21
         run: sh mvnw clean verify --batch-mode
 
+      # Dependabot runs get neither the repository secrets nor a writable GITHUB_TOKEN, so the
+      # uploads that authenticate with a repository secret are skipped for it.
       - name: Upload coverage to Codecov
+        if: github.actor != 'dependabot[bot]'
         uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5 # v7.1.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -92,6 +95,7 @@ jobs:
           file: ./target/site/jacoco/jacoco.xml
 
       - name: Upload coverage to Codacy
+        if: github.actor != 'dependabot[bot]'
         uses: codacy/codacy-coverage-reporter-action@89d6c85cfafaec52c72b6c5e8b2878d33104c699 # v1.3.0
         with:
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
