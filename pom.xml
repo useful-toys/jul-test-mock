@@ -214,9 +214,11 @@
                             <rules>
                                 <requireMavenVersion>
                                     <version>[3.9.8,3.10)</version>
+                                    <message>Build requires Maven 3.9.x (3.9.8 or later). Use the Maven Wrapper: sh mvnw (or mvnw.cmd).</message>
                                 </requireMavenVersion>
                                 <requireJavaVersion>
                                     <version>[21,22)</version>
+                                    <message>Build requires JDK 21 (Error Prone needs it); the library still targets Java 8. Compatibility tests on other JDKs must pass -Denforcer.skip=true.</message>
                                 </requireJavaVersion>
                             </rules>
                         </configuration>
