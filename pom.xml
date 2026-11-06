@@ -80,6 +80,7 @@
         <error-prone.version>2.52.0</error-prone.version>
         <maven-dependency-plugin.version>3.11.0</maven-dependency-plugin.version>
         <maven-enforcer-plugin.version>3.7.0</maven-enforcer-plugin.version>
+        <extra-enforcer-rules.version>1.12.1</extra-enforcer-rules.version>
     </properties>
 
 
@@ -195,6 +196,14 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
                 <version>${maven-enforcer-plugin.version}</version>
+                <dependencies>
+                    <!-- MojoHaus rules (e.g. banDuplicateClasses, enforceBytecodeVersion). -->
+                    <dependency>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>extra-enforcer-rules</artifactId>
+                        <version>${extra-enforcer-rules.version}</version>
+                    </dependency>
+                </dependencies>
                 <executions>
                     <execution>
                         <id>enforce-maven</id>
