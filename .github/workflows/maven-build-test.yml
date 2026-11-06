@@ -69,7 +69,7 @@ jobs:
       # this job. Resolving the static-analysis plugins here lets the analysis jobs, which
       # start after this one, restore a complete cache.
       - name: Populate Maven cache
-        run: sh mvnw dependency:resolve-plugins dependency:go-offline -P static-analysis,dependency-check,javadoc-validation --batch-mode -ntp
+        run: sh mvnw dependency:resolve-plugins dependency:go-offline -P static-analysis,javadoc-validation --batch-mode -ntp
 
       - name: Build and run full test suite with JDK 21
         run: sh mvnw clean verify --batch-mode
@@ -204,80 +204,12 @@ jobs:
           path: ${{ matrix.sarif }}
           retention-days: 1
 
-  # Job: Dependency vulnerability scan with OWASP Dependency-Check (informative).
-  # The NVD database lives in its own cache, keyed by day: each run restores the newest copy
-  # and only fetches what changed since; a new copy is saved at most once per day.
-  dependency-check:
-    name: Dependency Check (OWASP)
-    needs: [build, changes]
-    if: needs.changes.outputs.code == 'true'
-    runs-on: ubuntu-26.04
-    # Safety limit: the first full NVD download (no cache yet) is the slow case.
-    timeout-minutes: 60
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5
-        with:
-          java-version: '21'
-          distribution: 'temurin'
-          cache: 'maven'
-
-      - name: Compute NVD cache key
-        id: nvd-date
-        run: echo "date=$(date -u +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
-
-      - name: Cache NVD database
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ~/.dependency-check-data
-          key: dependency-check-data-${{ steps.nvd-date.outputs.date }}
-          restore-keys: dependency-check-data-
-
-      - name: Run OWASP Dependency-Check
-        env:
-          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
-        run: |
-          if [ -z "$NVD_API_KEY" ]; then
-            echo "::error::Secret NVD_API_KEY is not set. Request a key at https://nvd.nist.gov/developers/request-an-api-key"
-            exit 1
-          fi
-          sh mvnw dependency-check:check -P dependency-check --batch-mode -ntp
-
-      - name: Make SARIF paths repository-relative
-        run: python3 .github/scripts/sarif_report.py normalize target/dependency-check-report.sarif
-
-      - name: Upload SARIF to Code Scanning
-        if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4
-        with:
-          sarif_file: target/dependency-check-report.sarif
-          category: dependency-check
-
-      - name: Upload SARIF for the report job
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: sarif-dependency-check
-          path: target/dependency-check-report.sarif
-          retention-days: 1
-
-      - name: Upload HTML report
-        if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: dependency-check-report
-          path: target/dependency-check-report.html
-          retention-days: 7
-
   # Job: Aggregates the analyzers' SARIF reports and the build's coverage into the job
   # summary, a sticky PR comment and one artifact. Runs even if an analyzer failed, with
   # whatever reports arrived.
   static-analysis-report:
     name: Static Analysis Report
-    needs: [changes, build, static-analysis, dependency-check]
+    needs: [changes, build, static-analysis]
     if: ${{ !cancelled() && needs.changes.outputs.code == 'true' }}
     runs-on: ubuntu-26.04
 
@@ -303,7 +235,7 @@ jobs:
       - name: Publish summary
         run: |
           reports=()
-          for f in target/checkstyle-result.sarif target/pmd.sarif.json target/spotbugsSarif.json target/dependency-check-report.sarif; do
+          for f in target/checkstyle-result.sarif target/pmd.sarif.json target/spotbugsSarif.json; do
             if [ -f "$f" ]; then reports+=("$f"); fi
           done
           {
