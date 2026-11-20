@@ -75,7 +75,7 @@
              is a compile dependency. The enforceBytecodeVersion rule rejects the upgrade. -->
         <junit5.version>5.14.4</junit5.version>
         <jacoco-maven-plugin.version>0.8.16</jacoco-maven-plugin.version>
-        <versions-maven-plugin.version>2.23.0</versions-maven-plugin.version>
+        <versions-maven-plugin.version>2.25.2</versions-maven-plugin.version>
         <maven-surefire-plugin.version>3.6.1</maven-surefire-plugin.version>
         <maven-compiler-plugin.version>3.16.0</maven-compiler-plugin.version>
         <maven-source-plugin.version>3.4.0</maven-source-plugin.version>
@@ -99,7 +99,7 @@
         <maven-install-plugin.version>3.2.0</maven-install-plugin.version>
         <maven-deploy-plugin.version>3.2.0</maven-deploy-plugin.version>
         <maven-site-plugin.version>3.22.0</maven-site-plugin.version>
-        <maven-help-plugin.version>3.5.2</maven-help-plugin.version>
+        <maven-help-plugin.version>3.6.0</maven-help-plugin.version>
         <maven-wrapper-plugin.version>3.3.4</maven-wrapper-plugin.version>
     </properties>
 
