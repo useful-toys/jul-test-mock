@@ -66,7 +66,7 @@ jobs:
           persist-credentials: false # keeps the token out of .git, away from Maven plugins
 
       - name: Set up JDK 21
-        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
         with:
           java-version: '21'
           distribution: 'temurin'
@@ -138,7 +138,7 @@ jobs:
           persist-credentials: false # keeps the token out of .git, away from Maven plugins
 
       - name: Set up JDK ${{ matrix.java-version }}
-        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
         with:
           java-version: ${{ matrix.java-version }}
           distribution: 'temurin'
@@ -175,7 +175,7 @@ jobs:
           persist-credentials: false # keeps the token out of .git, away from Maven plugins
 
       - name: Set up JDK 21
-        uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+        uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
         with:
           java-version: '21'
           distribution: 'temurin'
@@ -222,21 +222,21 @@ jobs:
       - name: Upload SARIF to Code Scanning (Checkstyle)
         # Fork PRs get a read-only token, so skip the steps that need write access.
         if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4
+        uses: github/codeql-action/upload-sarif@1bd86f2fdb4b86187fa4059f16f31a3202acc9ea # v4
         with:
           sarif_file: target/checkstyle-result.sarif
           category: checkstyle
 
       - name: Upload SARIF to Code Scanning (PMD)
         if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4
+        uses: github/codeql-action/upload-sarif@1bd86f2fdb4b86187fa4059f16f31a3202acc9ea # v4
         with:
           sarif_file: target/pmd.sarif.json
           category: pmd
 
       - name: Upload SARIF to Code Scanning (SpotBugs)
         if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # v4
+        uses: github/codeql-action/upload-sarif@1bd86f2fdb4b86187fa4059f16f31a3202acc9ea # v4
         with:
           sarif_file: target/spotbugsSarif.json
           category: spotbugs
